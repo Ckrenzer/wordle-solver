@@ -1,7 +1,6 @@
 # Packages --------------------------------------------------------------------
 
 
-
 # Functions -------------------------------------------------------------------
 include("simple_stringr.jl")
 
@@ -11,10 +10,9 @@ function seq_len(num::Integer)
 end
 
 
+# Data Import -----------------------------------------------------------------
 # The list of possible answers
 open("data/wordle_list.txt") do file
    global words = read(file, String)
 end
 words = str_split(words, "\r\n")
-
-
