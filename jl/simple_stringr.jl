@@ -54,6 +54,12 @@ end
 function str_remove_all(string::String, pattern::Regex)
     str_replace_all(string, pattern, "")
 end
+function str_remove_all!(string::Vector{String}, pattern::String)
+    str_replace_all!(string, pattern, "")
+end
+function str_remove_all!(string::Vector{String}, pattern::Regex)
+    str_replace_all!(string, pattern, "")
+end
 
 # Replaces all matches of pattern in string with replacement.
 function str_replace_all(string::String, pattern::String, replacement::String)
@@ -61,6 +67,12 @@ function str_replace_all(string::String, pattern::String, replacement::String)
 end
 function str_replace_all(string::String, pattern::Regex, replacement::String)
     replace(string, pattern => replacement)
+end
+function str_replace_all!(string::Vector{String}, pattern::String, replacement::String)
+    string .= replace.(string, pattern => replacement)
+end
+function str_replace_all!(string::Vector{String}, pattern::Regex, replacement::String)
+    string .= replace.(string, pattern => replacement)
 end
 
 # Breaks a string into different elements separated by a delimiter.
