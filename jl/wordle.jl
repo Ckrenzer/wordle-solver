@@ -3,7 +3,7 @@
 
 
 # Functions -------------------------------------------------------------------
-# Add a source call to simple_stringr.jl here
+include("simple_stringr.jl")
 
 # The same as R's seq_len(), but probably not as safe.
 function seq_len(num::Integer)
