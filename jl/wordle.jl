@@ -14,6 +14,16 @@ function which(logical)
     seq_len(length(logical))[logical .== 1]
 end
 
+# Calculates the weighted mean. Fails if the input contains missing values.
+function weighted_mean(vals, weights)
+    if length(vals) != length(weights) error("vals and weights must be the same length!") end
+    valsum = 0
+    for i in seq_len(length(vals))
+        valsum += (vals[i] * weights[i])
+    end
+    valsum / sum(weights)
+end
+
 
 # Data Import -----------------------------------------------------------------
 # The list of possible answers
@@ -40,6 +50,7 @@ for i in num_colors, j in num_colors, k in num_colors, l in num_colors, m in num
     color_combos[rowindex, seq_len(5)] = [colors[i], colors[j], colors[k], colors[l], colors[m]] 
     rowindex += 1
 end
+num_combos = length(color_combos[:, 1])
 
 
 # Wordle Functions ------------------------------------------------------------
@@ -59,7 +70,7 @@ function build_regex(str, combo, all_letters = alphabet)
     
     # The letters to use in the regex.
     possible_letters = Vector{String}(undef, 5)
-        
+    
     # Green letters are set.
     for i in which(combo .== "green") possible_letters[i] = string(str[i]) end
     # Grey letters are set to the non-grey letters
@@ -80,10 +91,10 @@ function remove_letters(letters, to_remove)
     remove_letter_indexes = zeros(Int64, 5)
     for i in seq_len(length(to_remove))
         letter = string(to_remove[i])
-        # This which() call is guaranteed to be of length one
-        ind = which(letters .== letter)[1]
+        ind = which(letters .== letter)
         if(length(ind) != 0)
-            global remove_letter_indexes[i] = ind
+            # The vector `ind` is guaranteed to be of length one
+            global remove_letter_indexes[i] = ind[1]
         else
             global remove_letter_indexes[i] = 0
         end
@@ -94,4 +105,51 @@ end
 
 
 # Trials ----------------------------------------------------------------------
-guess_filter("while", combo)
+guess_filter("feens", combo)
+
+guess_filter("feens", color_combos[46, :])
+
+# The number of words remaining for all possible color combinations on one word
+indexes = seq_len(num_combos)
+remaining = zeros(Int64, num_combos)
+for i in indexes
+    remaining[i] = length(guess_filter("feens", color_combos[i, :]))
+end
+
+
+
+
+
+
+
+
+
+function test1()
+    num_remaining = zeros(Int64, num_combos)
+    indexes = seq_len(num_combos)
+    word_scores = Dict{String, Float64}()
+    for word in words[1:100]
+        for i in indexes
+            num_remaining[i] = length(guess_filter(word, color_combos[i, :]))
+        end
+        proportion_of_words_remaining = num_remaining ./ num_words
+        word_scores[word] = weighted_mean(proportion_of_words_remaining, num_remaining)
+    end
+    word_scores
+end
+
+@time test1()
+
+# 30.228534 seconds for 100 words
+(30.228534 / 100) * (1 / 60) * (1 / 60) * num_words
+
+
+num_words / 100
+
+# total time in seconds
+(30.228534 * 129.47)
+
+# total time in minutes
+(30.228534 * 129.47) / 60
+
+(51.6 * 129.47) / 60
