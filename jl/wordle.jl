@@ -25,34 +25,6 @@ function weighted_mean(vals, weights)
 end
 
 
-# Data Import -----------------------------------------------------------------
-# The list of possible answers
-open("data/wordle_list.txt") do file
-    global words = read(file, String)
-end
-words = string.(str_split(words, "\r\n"))
-num_words = length(words)
-
-
-# Additional Data -------------------------------------------------------------
-alphabet = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
-# Color combinations
-colors = ["green", "yellow", "grey"]
-# All potential match patterns that could be found. There are 243 of them
-# (3^5)--an option for each color and five letters in the word.
-#
-# You can assign an undefined string matrix, but you'll have to assign
-# values to each index before you will be allowed to subset it.
-color_combos = Array{String}(undef, 243, 5)
-num_colors = seq_len(length(colors))
-rowindex = 1
-for i in num_colors, j in num_colors, k in num_colors, l in num_colors, m in num_colors
-    color_combos[rowindex, seq_len(5)] = [colors[i], colors[j], colors[k], colors[l], colors[m]] 
-    rowindex += 1
-end
-num_combos = length(color_combos[:, 1])
-
-
 # Wordle Functions ------------------------------------------------------------
 # Takes the user's guess and filters down to the remaining possible words
 # based on the input word and color combo
@@ -104,41 +76,62 @@ function remove_letters(letters, to_remove)
 end
 
 
-# Trials ----------------------------------------------------------------------
-guess_filter("feens", combo)
+# Data Import -----------------------------------------------------------------
+# The list of possible answers
+open("data/wordle_list.txt") do file
+    global words = read(file, String)
+end
+words = string.(str_split(words, "\r\n"))
+num_words = length(words)
 
-guess_filter("feens", color_combos[46, :])
+
+# Additional Data -------------------------------------------------------------
+alphabet = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
+# Color combinations
+colors = ["green", "yellow", "grey"]
+# All potential match patterns that could be found. There are 243 of them
+# (3^5)--an option for each color and five letters in the word.
+#
+# You can assign an undefined string matrix, but you'll have to assign
+# values to each index before you will be allowed to subset it.
+color_combos = Array{String}(undef, 243, 5)
+num_colors = seq_len(length(colors))
+rowindex = 1
+for i in num_colors, j in num_colors, k in num_colors, l in num_colors, m in num_colors
+    color_combos[rowindex, seq_len(5)] = [colors[i], colors[j], colors[k], colors[l], colors[m]] 
+    rowindex += 1
+end
+num_combos = length(color_combos[:, 1])
+
+
+# Trials ----------------------------------------------------------------------
 
 # The number of words remaining for all possible color combinations on one word
+# ("feens" in this case). If the value is zero, that means there isn't a word
+# in the list that provides a match for the given word and pattern.
 indexes = seq_len(num_combos)
 remaining = zeros(Int64, num_combos)
 for i in indexes
     remaining[i] = length(guess_filter("feens", color_combos[i, :]))
 end
+remaining
 
-
-
-
-
-
-
-
-
-function test1()
-    num_remaining = zeros(Int64, num_combos)
-    indexes = seq_len(num_combos)
-    word_scores = Dict{String, Float64}()
-    for word in words[1:100]
-        for i in indexes
-            num_remaining[i] = length(guess_filter(word, color_combos[i, :]))
-        end
-        proportion_of_words_remaining = num_remaining ./ num_words
-        word_scores[word] = weighted_mean(proportion_of_words_remaining, num_remaining)
+# Calculates the proportion of words remaining for each word
+num_remaining = zeros(Int64, num_combos)
+indexes = seq_len(num_combos)
+word_scores = Dict{String, Float64}()
+for word in words
+    for i in indexes
+        num_remaining[i] = length(guess_filter(word, color_combos[i, :]))
     end
-    word_scores
+    proportion_of_words_remaining = num_remaining ./ num_words
+    word_scores[word] = weighted_mean(proportion_of_words_remaining, num_remaining)
 end
+word_scores
 
-@time test1()
+
+
+
 
 # 30.228534 seconds for 100 words
 (30.228534 / 100) * (1 / 60) * (1 / 60) * num_words
