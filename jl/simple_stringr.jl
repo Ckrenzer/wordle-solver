@@ -19,10 +19,7 @@ end
 
 # Basically a vectorized contains() but with that sweet,
 # sweet stringr naming convention
-function str_detect(string::String, pattern::String)    
-    contains(string, pattern)
-end
-function str_detect(string::String, pattern::Regex)    
+function str_detect(string, pattern)    
     contains(string, pattern)
 end
 
@@ -33,7 +30,7 @@ end
 # particularly by predefining the data type for m
 # and replacing the conditional statement, but the
 # function works as intended.
-function str_extract_all(string::String, pattern::Regex)
+function str_extract_all(string, pattern)
     m = match(pattern, string)
     if(!isnothing(m))
         m.match
@@ -43,7 +40,7 @@ function str_extract_all(string::String, pattern::Regex)
 end
 
 # Return the number of characters in each element of the string vector.
-function str_length(string::String)
+function str_length(string)
     length(string)
 end
 
@@ -55,7 +52,7 @@ function str_remove_all(string::String, pattern::Regex)
     str_replace_all(string, pattern, "")
 end
 function str_remove_all!(string::Vector{String}, pattern::String)
-    str_replace_all!(string, pattern, "")
+    string = str_replace_all!(string, pattern, "")
 end
 function str_remove_all!(string::Vector{String}, pattern::Regex)
     str_replace_all!(string, pattern, "")
@@ -114,16 +111,16 @@ function str_subset(string::String, pattern::Regex)
 end
 
 # Converts strings to lower case.
-function str_to_lower(string::String)
+function str_to_lower(string)
     lowercase(string)
 end
 
 # Converts strings to title case.
-function str_to_title(string::String)
+function str_to_title(string)
     titlecase(string)
 end
 
 # Converts strings to upper case.
-function str_to_upper(string::String)
+function str_to_upper(string)
     uppercase(string)
 end
