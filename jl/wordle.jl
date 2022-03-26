@@ -9,18 +9,24 @@ function seq_len(num::Integer)
     collect(1:1:num)
 end
 
+# Similar to R's which(), but definitely not as safe.
+function which(logical)
+    seq_len(length(logical))[logical .== 1]
+end
+
 
 # Data Import -----------------------------------------------------------------
 # The list of possible answers
 open("data/wordle_list.txt") do file
-   global words = read(file, String)
+    global words = read(file, String)
 end
-words = str_split(words, "\r\n")
+words = string.(str_split(words, "\r\n"))
 num_words = length(words)
 
 
 # Additional Data -------------------------------------------------------------
-# Combinations
+alphabet = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
+# Color combinations
 colors = ["green", "yellow", "grey"]
 # All potential match patterns that could be found. There are 243 of them
 # (3^5)--an option for each color and five letters in the word.
@@ -32,89 +38,60 @@ num_colors = seq_len(length(colors))
 rowindex = 1
 for i in num_colors, j in num_colors, k in num_colors, l in num_colors, m in num_colors
     color_combos[rowindex, seq_len(5)] = [colors[i], colors[j], colors[k], colors[l], colors[m]] 
-    rowindex = rowindex + 1
+    rowindex += 1
 end
-
-
-function guess_filter(string, current_combo, word_list = words)
-
-
-
-
-
-
 
 
 # Wordle Functions ------------------------------------------------------------
-# Evaluate the user's guess
-function guess(string, ans)
-    if(str_length(string) != 5)
-        error("Five letter words only!")
-    elseif(!string in words)
-        error("Invalid word.")
-    end
+# Takes the user's guess and filters down to the remaining possible words
+# based on the input word and color combo
+function guess_filter(string, current_combo, word_list = words)
+    if(length(string) != 5) error("You must use a five letter word!") end
+    rgx = build_regex(string, current_combo)
+    str_subset(word_list, Regex(rgx))
+end
 
-    hints = Vector{String}(undef, 5)
-    for i in 1:5
-        if(string[i] == ans[i])
-            global hints[i] = "green"
-        elseif(str_detect(ans, string[i]))
-            global hints[i] = "yellow"
+# Creates a regular expression to filter the word list
+function build_regex(str, combo, all_letters = alphabet)
+    # Grey letters are removed from the list entirely
+    grey_letters = str[which(combo .== "grey")]
+    non_grey_letters = remove_letters(all_letters, grey_letters)
+    
+    # The letters to use in the regex.
+    possible_letters = Vector{String}(undef, 5)
+        
+    # Green letters are set.
+    for i in which(combo .== "green") possible_letters[i] = string(str[i]) end
+    # Grey letters are set to the non-grey letters
+    for i in which(combo .== "grey") possible_letters[i] = str_c(non_grey_letters) end
+    # Yellow letters are removed from the index in which they appear
+    for i in which(combo .== "yellow") possible_letters[i] = str_c(remove_letters(non_grey_letters, string(str[i]))) end
+    
+    # Each element of the array will be surrounded by brackets []
+    # to send to the regex.
+    str_c("[" .* possible_letters .* "]")
+end
+
+# Creates a new array containing only the letters
+# not in to_remove by identifying the letter
+# to remove's position in the array
+# and creates a new array that excludes the letter.
+function remove_letters(letters, to_remove)
+    remove_letter_indexes = zeros(Int64, 5)
+    for i in seq_len(length(to_remove))
+        letter = string(to_remove[i])
+        # This which() call is guaranteed to be of length one
+        ind = which(letters .== letter)[1]
+        if(length(ind) != 0)
+            global remove_letter_indexes[i] = ind
         else
-            global hints[i] = "grey"
+            global remove_letter_indexes[i] = 0
         end
     end
-    hints
+    remove_letter_indexes = remove_letter_indexes[remove_letter_indexes .!= 0]
+    letters[setdiff(1:end, remove_letter_indexes)]
 end
 
 
-# Going to build a regex with this array
-letters = ["[", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "]"]
-str_subset(letters, r"[^e]")
-str_c(str_subset(letters, Regex("[^e]")))
-
-
-# Make a list of possible letters?
-
-
-
-# Filter the list to answers that are still possible
-function find_remaining_words(guess, guess_results, words)
-    
-    greys = str_split(guess, "")[str_detect.(guess_results, "grey")]
-    yellows = str_split(guess, "")[str_detect.(guess_results, "yellow")]
-    
-    # Regex for not grey, not yellow, and not grey and not yellow
-    not_greys = "[^" * str_c(greys) * "]"
-    not_yellows = "[^" * str_c(yellows) * "]"
-    not_greys_nor_yellows = FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-
-    # Build a regular expression to subset the word list
-    pattern = Vector{String}(undef, 5)
-    for i in seq_len(str_length(guess))
-        if(string(guess[i]) in greys)
-            pattern[i] = str_c(str_subset(letters, Regex(not_greys)))
-        elseif(string(guess[i]) in yellows)
-            pattern[i] = not_greys_nor_yellows
-        else
-            pattern[i] = guess[i]
-        end
-    end
-
-    str_subset(words, pattern)
-
-end
-
-string("hi"[1]) in ["hello", "h"]
-
-str_c(["[^", "e", "]"])
-guess("while", "women")
-
-x = "while"
-greys = str_split(x, "")[str_detect.(["green", "yellow", "grey", "yellow", "grey"], "grey")]
-not_greys = "[^" * str_c(greys) * "]"
-str_subset(letters, Regex(not_greys))
-
-string(x[1]) in ["hey", "w"]
-
-typeof(SubString("hello", 1, 1))
+# Trials ----------------------------------------------------------------------
+guess_filter("while", combo)
