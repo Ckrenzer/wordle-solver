@@ -105,7 +105,6 @@ num_combos = length(color_combos[:, 1])
 
 
 # Trials ----------------------------------------------------------------------
-
 # The number of words remaining for all possible color combinations on one word
 # ("feens" in this case). If the value is zero, that means there isn't a word
 # in the list that provides a match for the given word and pattern.
@@ -128,21 +127,3 @@ for word in words
     word_scores[word] = weighted_mean(proportion_of_words_remaining, num_remaining)
 end
 word_scores
-
-
-
-
-
-# 30.228534 seconds for 100 words
-(30.228534 / 100) * (1 / 60) * (1 / 60) * num_words
-
-
-num_words / 100
-
-# total time in seconds
-(30.228534 * 129.47)
-
-# total time in minutes
-(30.228534 * 129.47) / 60
-
-(51.6 * 129.47) / 60
