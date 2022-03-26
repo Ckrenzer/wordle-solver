@@ -43,10 +43,10 @@
 
 
 # Packages --------------------------------------------------------------------
-if(!require(readr)) library(readr)
-if(!require(stringr)) library(stringr); library(stringr)
-if(!require(ggplot2)) library(ggplot2); library(ggplot2)
-if(!require()) library(dplyr); library()
+if(!require(readr)) install.packages("readr")
+if(!require(stringr)) install.packages("stringr"); library(stringr)
+if(!require(ggplot2)) install.packages("ggplot2"); library(ggplot2)
+if(!require(dplyr)) install.packages("dplyr"); library(dplyr)
 
 
 # Import Data -----------------------------------------------------------------
