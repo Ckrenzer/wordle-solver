@@ -92,18 +92,16 @@ end
 words = string.(str_split(words, "\r\n"))
 num_words = length(words)
 
-# The unweighted scores (calculated by getting the final results of `word_scores`).
-scores = CSV.read("data/processed/unweighted_word_scores.csv", DataFrame, header = ["word", "score"])
 # Word counts to use as weights.
 unigrams = CSV.read("data/raw/unigram_freq.csv", DataFrame)
 subset!(unigrams, :word => ByRow(x -> length.(x) .== 5))
-weighted = select(leftjoin(scores, unigrams, on = :word), Not(:score))
+weighted = leftjoin(DataFrame(word = words), unigrams, on = :word)
 replace!(weighted.count, missing => 0)
+unigrams = nothing
 
 # All words will be in alphabetical order.
 # This enables sharing of indexes across multiple objects.
 sort!(words)
-sort!(scores, :word)
 sort!(weighted, :word)
 
 # A dictionary for fast and easy subsetting of word frequencies
@@ -149,7 +147,7 @@ remaining
 num_remaining = zeros(Int64, num_combos)
 word_scores = Dict{String, Float64}()
 for word in words
-    println("Word: " * word * ".    Time: " * Dates.format(Dates.now(), "HH:MM"))
+    println("Word: " * word * "    Time: " * Dates.format(Dates.now(), "HH:MM"))
     for i in indexes
         num_remaining[i] = length(guess_filter(word, color_combos[i, :]))
     end
@@ -162,7 +160,7 @@ end
 word_counts = sum(weighted.count)
 word_weights = Dict{String, Float64}()
 for word in words
-    println("Word: " * word * ".    Time: " * Dates.format(Dates.now(), "HH:MM"))
+    println("Word: " * word * "    Time: " * Dates.format(Dates.now(), "HH:MM"))
     for i in indexes
         num_remaining[i] = sum(get_freq(guess_filter(word, color_combos[i, :])))
     end
@@ -172,8 +170,24 @@ end
 
 
 # Results ---------------------------------------------------------------------
+# The scores (calculated using the final results in the Calculations section).
+scores = CSV.read("data/processed/opening_word_scores.csv", DataFrame, header = true)
+
 # What is the best opening word, assuming the words are all equally likely?
-scores[scores.score .== minimum(scores.score), :]
+scores[scores.unweighted_score .== minimum(scores.unweighted_score), :]
+# How about when the words are weighted based on how often they're used?
+scores[scores.weighted_score .== minimum(scores.weighted_score), :]
+
+
+
+
+
+
+
+
+
+
+
 
 
 # NEXT STEPS:
