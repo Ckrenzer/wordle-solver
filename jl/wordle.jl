@@ -1,6 +1,7 @@
 # Packages --------------------------------------------------------------------
 using CSV
 using DataFrames
+using Dates
 
 
 # Functions -------------------------------------------------------------------
@@ -29,15 +30,13 @@ end
 # Runs a query on the `weighted` data frame and returns
 # the word frequency for each of the input words.
 function get_freq(terms, df = weighted)
-    matches = zeros(Int16, nrow(df))
-    for term in terms
-        for i in seq_len(nrow(df))
-            if str_detect(df[i, 1], term)
-                matches[i] = i
-            end
-        end
+    matches = zeros(Int16, length(terms))
+    all_words = string.(df.word)
+    for i in seq_len(length(terms))
+            matches[i] = which(all_words .== terms[i])[1]
+            i += 1
     end
-    collect(df[matches[matches .!= 0], 2])
+    collect(df[matches, 2])
 end
 
 
@@ -140,7 +139,6 @@ remaining
 
 # Calculates the proportion of words remaining for each word.
 num_remaining = zeros(Int64, num_combos)
-indexes = seq_len(num_combos)
 word_scores = Dict{String, Float64}()
 for word in words
     for i in indexes
@@ -150,12 +148,14 @@ for word in words
     word_scores[word] = weighted_mean(proportion_of_words_remaining, num_remaining)
 end
 
+
 # Calculates the weighted proportion of words remaining.
 word_counts = sum(weighted.count)
 word_weights = Dict{String, Float64}()
 for word in words
+    println("Word: " * word * ".    Time: " * Dates.format(now(), "HH:MM"))
     for i in indexes
-        num_remaining[i] = guess_filter(word, color_combos[i, :]) |> get_freq |> sum
+        num_remaining[i] = sum(get_freq(guess_filter(word, color_combos[i, :])))
     end
     proportion_of_words_remaining = num_remaining ./ word_counts
     word_weights[word] = weighted_mean(proportion_of_words_remaining, num_remaining)
@@ -165,12 +165,6 @@ end
 # Results ---------------------------------------------------------------------
 # What is the best opening word, assuming the words are all equally likely?
 scores[scores.score .== minimum(scores.score), :]
-
-
-
-
-
-
 
 
 # NEXT STEPS:
