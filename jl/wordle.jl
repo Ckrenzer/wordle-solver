@@ -1,7 +1,7 @@
 # Packages --------------------------------------------------------------------
 using CSV
 using DataFrames
-using Dates
+import Dates
 
 
 # Functions -------------------------------------------------------------------
@@ -29,14 +29,8 @@ end
 
 # Runs a query on the `weighted` data frame and returns
 # the word frequency for each of the input words.
-function get_freq(terms, df = weighted)
-    matches = zeros(Int16, length(terms))
-    all_words = string.(df.word)
-    for i in seq_len(length(terms))
-            matches[i] = which(all_words .== terms[i])[1]
-            i += 1
-    end
-    collect(df[matches, 2])
+function get_freq(terms, dictionary = weighted_dict)
+    getindex.(Ref(dictionary), terms)
 end
 
 
@@ -106,6 +100,20 @@ subset!(unigrams, :word => ByRow(x -> length.(x) .== 5))
 weighted = select(leftjoin(scores, unigrams, on = :word), Not(:score))
 replace!(weighted.count, missing => 0)
 
+# All words will be in alphabetical order.
+# This enables sharing of indexes across multiple objects.
+sort!(words)
+sort!(scores, :word)
+sort!(weighted, :word)
+
+# A dictionary for fast and easy subsetting of word frequencies
+weighted_dict = Dict{String, Int64}()
+rowindex = 1
+for word in words
+    weighted_dict[word] = weighted[rowindex, 2]
+    rowindex += 1
+end
+
 
 # Additional Data -------------------------------------------------------------
 alphabet = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
@@ -141,6 +149,7 @@ remaining
 num_remaining = zeros(Int64, num_combos)
 word_scores = Dict{String, Float64}()
 for word in words
+    println("Word: " * word * ".    Time: " * Dates.format(Dates.now(), "HH:MM"))
     for i in indexes
         num_remaining[i] = length(guess_filter(word, color_combos[i, :]))
     end
@@ -153,7 +162,7 @@ end
 word_counts = sum(weighted.count)
 word_weights = Dict{String, Float64}()
 for word in words
-    println("Word: " * word * ".    Time: " * Dates.format(now(), "HH:MM"))
+    println("Word: " * word * ".    Time: " * Dates.format(Dates.now(), "HH:MM"))
     for i in indexes
         num_remaining[i] = sum(get_freq(guess_filter(word, color_combos[i, :])))
     end
