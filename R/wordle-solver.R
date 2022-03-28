@@ -29,7 +29,7 @@ for(i in seq_along(colors)){
     }
   }
 }
-rm(i, j, k, l, m, index, colors)
+rm(i, j, k, l, m, index)
 
 
 # Wordle Functions ------------------------------------------------------------
@@ -83,7 +83,7 @@ play <- function(df = scores, terms = words, use_weighted_scores = TRUE){
     dplyr::pull(word)
   
   message("Your best bet: ", best_guess)
-  Sys.sleep(5)
+  ###Sys.sleep(5)
   message("Enter your color combo (Ex. green green grey yellow green), then hit Enter: ")
   combo <- scan(what = "character", n = 5, quiet = TRUE)
   while(!any(as.logical(lapply(color_combos, function(x) all(combo == x))))){
@@ -100,5 +100,3 @@ play <- function(df = scores, terms = words, use_weighted_scores = TRUE){
          use_weighted_scores = using_weighted_score)
   }
 }
-
-play()

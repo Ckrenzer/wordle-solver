@@ -22,3 +22,10 @@ I found term frequency data weighing the words on [Kaggle](https://www.kaggle.co
 I have *thoroughly* enjoyed using Julia. Using for loops and if statements without guilt sure feels nice! The Julia code runs nearly twice as fast as R, using similar approaches to my subsetting algorithm in both languages. And that's with very little experience with Julia's ins-and-outs.
 
 My biggest difficulties with the language come from subsettting. R's subsetting operations are very concise, but I've found that many of the Julia functions are not quite as user-friendly or robust, meaning I had to write custom functions for several subsetting operations.
+
+
+# Next Steps
+
+-   Fix simple_stringr.jl and only keep those functions that were used in the script.
+
+-   THE APP SHOULD TRY TO EXPLAIN TO THE USER WHY THE APP IS THE BEST GUESS, PERHAPS BY USING ONE OF THOSE FANCY GRAPHS. YOU KNOW THE ONE.
