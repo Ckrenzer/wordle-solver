@@ -25,3 +25,4 @@ Manifest.toml
 
 # VS Code files
 .vscode/
+.Rproj.user
