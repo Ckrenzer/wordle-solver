@@ -1,15 +1,3 @@
-# Notes -----------------------------------------------------------------------
-#
-# This implementation requires you to have access to a five letter word. This
-# is why 'answer' is a word randomly chosen from the list of accepted answers.
-#
-# Should you make a bot that inputs your guesses into the game online?
-#
-#
-# After supplying the first guess, work within the remaining possible answers
-# to determine the next best guess.
-
-
 # Packages --------------------------------------------------------------------
 if(!require(readr)) install.packages("readr")
 if(!require(stringr)) install.packages("stringr"); library(stringr)
@@ -62,7 +50,6 @@ build_regex <- function(str, combo){
   # Each letter is an element of an array  
   str <- str_split(str, "")[[1]]
   
-  
   # Grey letters are removed from the list entirely.
   grey_letters <- str[combo == "grey"]
   non_grey_letters <- letters[!letters %in% grey_letters]
@@ -112,29 +99,6 @@ play <- function(df = scores, terms = words, use_weighted_scores = TRUE){
          terms = guess_filter(string = best_guess, current_combo = combo, word_list = word_df$word),
          use_weighted_scores = using_weighted_score)
   }
-  
 }
 
 play()
-
-
-# Misc ------------------------------------------------------------------------
-
-# This calculates the number of possible words based
-# on the input pattern for one input word.
-#
-# This may be computationally expensive. I suggest making a function
-# to allow the user to compute these values on demand.
-remaining <- double(length(color_combos))
-for(i in seq_along(color_combos)){
-  remaining[i] <- length(guess_filter("while", color_combos[[i]]))
-}
-
-# The proportion
-proportion_of_words_remaining <- remaining / num_words
-
-plot_while <- ggplot(mapping = aes(x = reorder(seq_along(color_combos), -proportion_of_words_remaining), y = proportion_of_words_remaining)) +
-  geom_col() +
-  ggtitle("Lower values are better--you want as few words remaining as possible!") +
-  xlab("Match Pattern Index") +
-  theme(axis.text.x = element_text(size = 5.8, angle = 90))
