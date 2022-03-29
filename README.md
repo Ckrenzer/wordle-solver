@@ -18,20 +18,18 @@ shiny::runGitHub(repo = "wordle-solver",
 
 
 # Motivations
-I made this repo as a Julia learning exercise.
 
-Learning the syntax of a programming language is something best done through experience. I usually have a sense for how R behaves. The basics are pretty simple since almost every data structure is implemented with arrays, along with the fact that there are only four useful data types ('character', 'logical', 'integer', 'double'). Copy-on-modify semantics and the quote from John Chambers, "Everything that exists is an object. Everything that happens is a function call" allow users to draft up pretty coherent guiding principles when studying code. I have not built up guiding intuition of how Julia reacts to different situations, however. It is for this purpose I made this solver.
+I usually have a sense for how R behaves. The basics are pretty simple since almost every data structure is implemented with arrays, along with the fact that there are only four useful data types ('character', 'logical', 'integer', 'double'). Copy-on-modify semantics and the quote from John Chambers, "Everything that exists is an object. Everything that happens is a function call" allow users to draft up pretty coherent guiding principles when studying code.
 
-Among other things, Julia attempts to retain the straightforwardness of R while providing more control to the developer. The Wordle solver will, hopefully, give me some insights into these changes of behavior. The best way to learn something is by spending time with it. Wordle gives me a perfect excuse to do just that!
-
+Learning the syntax of a programming language is something best done through experience. I have not built up guiding intuition of how Julia reacts to different situations, however. It is for this purpose I made this solver.
 
 # Data
 
-## Raw
+### Raw
 
 I found term frequency data weighing the words on [Kaggle](https://www.kaggle.com/datasets/rtatman/english-word-frequency?select=unigram_freq.csv).
 
-## Processed
+### Processed
 
 This directory contains the term frequency, unweighted score, and weighted score for each word in the Wordle list of acceptable answers. This was the most computationally expensive portion of the project. To identify the best opening word, each color pattern had to be tried to see the number of remaining words. My Julia algorithm takes .3 seconds to calculate the score for one word.
 
