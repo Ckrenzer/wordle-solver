@@ -26,7 +26,16 @@ Among other things, Julia attempts to retain the straightforwardness of R while 
 
 
 # Data
+
+## Raw
+
 I found term frequency data weighing the words on [Kaggle](https://www.kaggle.com/datasets/rtatman/english-word-frequency?select=unigram_freq.csv).
+
+## Processed
+
+This directory contains the term frequency, unweighted score, and weighted score for each word in the Wordle list of acceptable answers. This was the most computationally expensive portion of the project. To identify the best opening word, each color pattern had to be tried to see the number of remaining words. My Julia algorithm takes .3 seconds to calculate the score for one word.
+
+The score columns are average proportions of words remaining after choosing a particular word (the unweighted one being when all words are equally likely with the other being the weighted average of the proportion of remaining words--weighted on term frequency). To avoid having to explain the rules of golf, the 'score' you'll see in the app is just the inverse of the weighted score.
 
 
 # Thoughts
