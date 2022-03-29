@@ -1,7 +1,7 @@
 # Setup -----------------------------------------------------------------------
 if(!require(shiny)) install.packages("shiny"); library(shiny)
-if(!library(shinycssloaders, logical.return = TRUE)) install.packages("shinycssloaders")
-if(!library(shinyjs, logical.return = TRUE)) install.packages("shinyjs")
+if(!require(shinycssloaders)) install.packages("shinycssloaders"); library(shinycssloaders)
+if(!require(shinyjs)) install.packages("shinyjs"); library(shinyjs)
 source("solver/wordle-solver.R")
 
 
@@ -91,7 +91,7 @@ server <- function(input, output) {
   # Updates the user's combo and filters down to the remaining words
   observeEvent(input$update, {
     # Filter down to the remaining words
-    terms$data <- guess_filter(string = input$guess,
+    terms$data <- guess_filter(string = str_to_lower(input$guess),
                                current_combo = combo(),
                                word_list = terms$data)
     df$data <- dplyr::filter(df$data, word %in% terms$data)
@@ -141,5 +141,6 @@ server <- function(input, output) {
       slice(1:10)
   })
 }
+
 
 shinyApp(ui = ui, server = server)

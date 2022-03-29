@@ -94,7 +94,6 @@ play <- function(df = scores, terms = words, use_weighted_scores = TRUE){
     combo <- scan(what = "character", n = 5)
   }
   
-  
   if(all(combo == "green")){
     return("You win!")
   } else {
