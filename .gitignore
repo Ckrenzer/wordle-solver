@@ -30,3 +30,4 @@ Manifest.toml
 .Rproj.user
 .Rdata
 .Rhistory
+R/app/rsconnect/
