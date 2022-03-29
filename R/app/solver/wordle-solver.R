@@ -7,9 +7,12 @@ if(!require(rlang)) install.packages("rlang"); library(rlang)
 
 
 # Import Data -----------------------------------------------------------------
-words <- readr::read_lines("data/raw/wordle_list.txt")
+# Reading from URLs makes this much less of a headache...
+#words <- readr::read_lines("data/raw/wordle_list.txt")
+words <- readr::read_lines("https://raw.githubusercontent.com/Ckrenzer/wordle-solver/main/data/raw/wordle_list.txt")
 num_words <- length(words)
-scores <- readr::read_csv("data/processed/opening_word_scores.csv")
+#scores <- readr::read_csv("data/processed/opening_word_scores.csv")
+scores <- readr::read_csv("https://raw.githubusercontent.com/Ckrenzer/wordle-solver/main/data/processed/opening_word_scores.csv")
 
 # Combinations
 # All potential match patterns that could be found. There are 243 of them
@@ -73,7 +76,7 @@ build_regex <- function(str, combo){
 
 
 # Play ------------------------------------------------------------------------
-# This function allows the game to be played at the R console
+# This function allows the game to be solved at the R console
 play_console <- function(df = scores, terms = words, use_weighted_scores = TRUE){
   score_col <- if(use_weighted_scores) expr(weighted_score) else expr(unweighted_score)
   using_weighted_score <- use_weighted_scores
