@@ -25,4 +25,8 @@ Manifest.toml
 
 # VS Code files
 .vscode/
+
+# Rstudio files
 .Rproj.user
+.Rdata
+.Rhistory

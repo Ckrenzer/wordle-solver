@@ -73,7 +73,8 @@ build_regex <- function(str, combo){
 
 
 # Play ------------------------------------------------------------------------
-play <- function(df = scores, terms = words, use_weighted_scores = TRUE){
+# This function allows the game to be played at the R console
+play_console <- function(df = scores, terms = words, use_weighted_scores = TRUE){
   score_col <- if(use_weighted_scores) expr(weighted_score) else expr(unweighted_score)
   using_weighted_score <- use_weighted_scores
   
@@ -83,7 +84,6 @@ play <- function(df = scores, terms = words, use_weighted_scores = TRUE){
     dplyr::pull(word)
   
   message("Your best bet: ", best_guess)
-  ###Sys.sleep(5)
   message("Enter your color combo (Ex. green green grey yellow green), then hit Enter: ")
   combo <- scan(what = "character", n = 5, quiet = TRUE)
   while(!any(as.logical(lapply(color_combos, function(x) all(combo == x))))){
@@ -95,8 +95,8 @@ play <- function(df = scores, terms = words, use_weighted_scores = TRUE){
   if(all(combo == "green")){
     return("You win!")
   } else {
-    play(df = word_df,
-         terms = guess_filter(string = best_guess, current_combo = combo, word_list = word_df$word),
-         use_weighted_scores = using_weighted_score)
+    play_console(df = word_df,
+                 terms = guess_filter(string = best_guess, current_combo = combo, word_list = word_df$word),
+                 use_weighted_scores = using_weighted_score)
   }
 }
