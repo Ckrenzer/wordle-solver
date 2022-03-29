@@ -65,8 +65,8 @@ ui <- fluidPage(
     # words of the current guess
     plotOutput("word_plot") %>% withSpinner(color = "#0dc5c1"),
     
-    strong("The Top 10 Choices:"),
     # Prints the remaining choices to the console
+    strong("The Top 10 Choices:"),
     tableOutput("remaining_words")
   )
 )
@@ -75,6 +75,8 @@ ui <- fluidPage(
 # Server ----------------------------------------------------------------------
 server <- function(input, output) {
   
+  
+  # Updating values based on clicking of an action button ---------------------
   # Supplies default values to 'df' and 'terms'
   df <- reactiveValues(data = scores)
   terms <- reactiveValues(data = words)
@@ -86,9 +88,22 @@ server <- function(input, output) {
     terms$data <- words
   })
   
+  # Updates the user's combo and filters down to the remaining words
+  observeEvent(input$update, {
+    # Filter down to the remaining words
+    terms$data <- guess_filter(string = input$guess,
+                               current_combo = combo(),
+                               word_list = terms$data)
+    df$data <- dplyr::filter(df$data, word %in% terms$data)
+    best_guess$data <-  df$data %>%  
+      dplyr::filter(weighted_score == min(weighted_score)) %>% 
+      dplyr::pull(word)
+  })
+  
+  
+  # Updating values -----------------------------------------------------------
   # Creates the combo from the user's input
   combo <- reactive({c(input$color1, input$color2, input$color3, input$color4, input$color5)})
-  
   
   # Creates the plot containing the proportion remaining for a given pattern
   proportion_plot <- reactive({
@@ -112,19 +127,7 @@ server <- function(input, output) {
   })
   
   
-  # Updates the user's combo and filters down to the remaining words
-  observeEvent(input$update, {
-    # Filter down to the remaining words
-    terms$data <- guess_filter(string = input$guess,
-                               current_combo = combo(),
-                               word_list = terms$data)
-    df$data <- dplyr::filter(df$data, word %in% terms$data)
-    best_guess$data <-  df$data %>%  
-      dplyr::filter(weighted_score == min(weighted_score)) %>% 
-      dplyr::pull(word)
-  })
-  
-  
+  # Displaying Output ---------------------------------------------------------
   # The recommended word
   output$guess <- renderPrint({cat("The best word to use is:", best_guess$data)})
   # The proportion plot

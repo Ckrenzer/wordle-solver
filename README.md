@@ -1,17 +1,28 @@
 # About
 Uses information theory to solve Wordle puzzles, inspired by [3Blue1Brown's YouTube video](https://youtu.be/v68zYyaEmEA).
 
-The goal is to turn this into a word recommender through a shiny app. Details to come--there's only so much I can do in a weekend!
-
 Oh, and for the record: I never looked at 3Blue1Brown's code. The code you see is entirely from my own noggin. The linked video is all I used as reference.
+
+
+# The Solver
+
+You can see the solver with [this link](https://7phynv-connor0krenzer.shinyapps.io/Wordle-Solver/) when it is hosted on shinyapps.io, or you can paste the following code into your R console:
+
+```
+if(!require(shiny)) install.packages("shiny")
+shiny::runGitHub(repo = "wordle-solver",
+                 username = "Ckrenzer",
+                 subdir = "R/app",
+                 ref = "main")
+```
 
 
 # Motivations
 I made this repo as a Julia learning exercise.
 
-Learning the syntax of a programming language is something best learned through experience. I usually have a sense for how R behaves. Almost every data structure being implemented with arrays, along with the fact that there are only four useful data types ('character', 'logical', 'integer', 'double') means the basics are pretty simple. Copy-on-modify semantics and the quote from John Chambers, "Everything that exists is an object. Everything that happens is a function call" allow users to draft up pretty coherent guiding principles when studying code.
+Learning the syntax of a programming language is something best done through experience. I usually have a sense for how R behaves. The basics are pretty simple since almost every data structure is implemented with arrays, along with the fact that there are only four useful data types ('character', 'logical', 'integer', 'double'). Copy-on-modify semantics and the quote from John Chambers, "Everything that exists is an object. Everything that happens is a function call" allow users to draft up pretty coherent guiding principles when studying code. I have not built up guiding intuition of how Julia reacts to different situations, however. It is for this purpose I made this solver.
 
-Among other things, Julia attempts to retain the straighforwardness of R while providing more control to the developer. The Wordle solver will, hopefully, give me some insights into these changes of behavior. The best way to learn something is by spending time with it. Wordle gives me a perfect excuse to do just that!
+Among other things, Julia attempts to retain the straightforwardness of R while providing more control to the developer. The Wordle solver will, hopefully, give me some insights into these changes of behavior. The best way to learn something is by spending time with it. Wordle gives me a perfect excuse to do just that!
 
 
 # Data
@@ -27,5 +38,3 @@ My biggest difficulties with the language come from subsettting. R's subsetting 
 # Next Steps
 
 -   Fix simple_stringr.jl and only keep those functions that were used in the script.
-
--   THE APP SHOULD TRY TO EXPLAIN TO THE USER WHY THE APP IS THE BEST GUESS, PERHAPS BY USING ONE OF THOSE FANCY GRAPHS. YOU KNOW THE ONE.

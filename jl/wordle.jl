@@ -155,7 +155,6 @@ for word in words
     word_scores[word] = weighted_mean(proportion_of_words_remaining, num_remaining)
 end
 
-
 # Calculates the weighted proportion of words remaining.
 word_counts = sum(weighted.count)
 word_weights = Dict{String, Float64}()
