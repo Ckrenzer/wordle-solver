@@ -1,7 +1,7 @@
 # About
 Uses information theory to solve Wordle puzzles, inspired by [3Blue1Brown's YouTube video](https://youtu.be/v68zYyaEmEA).
 
-Oh, and for the record: I never looked at 3Blue1Brown's code. The code you see is entirely from my own noggin. The linked video is all I used as reference.
+Oh, and for the record: I never looked at 3Blue1Brown's code--the code you see is entirely from my own noggin. The linked video is all I used as reference.
 
 
 # The Solver
@@ -15,6 +15,11 @@ shiny::runGitHub(repo = "wordle-solver",
                  subdir = "R/app",
                  ref = "main")
 ```
+
+*Note: You will need to have Julia installed for this app to function on your local machine.*
+
+
+Calculating all possible outcomes would take a day or so to run on my laptop, from my flawed estimates (namely, 18e6 / (12947 * 1.1) / 60: I'm guestimating there are 18 million outcomes, my algo can run 12947 * 1.1 words per hour, and there are 60 minutes in an hour obviously == 21 hours). It may take some time before I'm ready to run something like this.
 
 
 # Motivations
@@ -31,7 +36,7 @@ I found term frequency data weighing the words on [Kaggle](https://www.kaggle.co
 
 ### Processed
 
-This directory contains the term frequency, unweighted score, and weighted score for each word in the Wordle list of acceptable answers. This was the most computationally expensive portion of the project. To identify the best opening word, each color pattern had to be tried to see the number of remaining words. My Julia algorithm takes .3 seconds to calculate the score for one word.
+This directory contains the term frequency, unweighted score, and weighted score for each word in the Wordle list of acceptable answers. This was the most computationally expensive portion of the project. To identify the best opening word, each color pattern had to be tried to see the number of remaining words. My Julia algorithm takes .3 seconds to calculate a score for one word.
 
 The score columns are average proportions of words remaining after choosing a particular word (the unweighted one being when all words are equally likely with the other being the weighted average of the proportion of remaining words--weighted on term frequency). To avoid having to explain the rules of golf, the 'score' you'll see in the app is just the inverse of the weighted score.
 
@@ -45,3 +50,13 @@ My biggest difficulties with the language come from subsettting. R's subsetting 
 # Next Steps
 
 -   Fix simple_stringr.jl and only keep those functions that were used in the script.
+
+- Get app running without needing to read in data from a url.
+
+- try to make subsequent guesses better. Your current solver uses words that give the most information about the full data set, not the remaining choices.
+
+- Ensure the player 'loses' after 6 guesses?
+
+- Add a check looking for words containing yellow letters.
+
+- Consider making a very large file that contains all possible scores. (That's really expensive. Do ti for the top 10 words in each round? That can all be written to multiple files ((one file would be too big for github)). The run name would be the only difference).
