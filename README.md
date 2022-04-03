@@ -60,3 +60,5 @@ My biggest difficulties with the language come from subsettting. R's subsetting 
 - Add a check looking for words containing yellow letters.
 
 - Consider making a very large file that contains all possible scores. (That's really expensive. Do ti for the top 10 words in each round? That can all be written to multiple files ((one file would be too big for github)). The run name would be the only difference).
+
+- Consider adding a constant for the length of a string (5).

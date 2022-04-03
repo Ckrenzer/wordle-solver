@@ -1,6 +1,7 @@
 # Packages --------------------------------------------------------------------
 using CSV
 using DataFrames
+using DataFramesMeta
 import Dates
 
 
@@ -12,6 +13,13 @@ function seq_len(num::Integer)
     collect(1:1:num)
 end
 
+# The same as R's seq_along(), but probably not as safe.
+# Code fails in surprising ways when you have a length
+# zero input.
+function seq_along(obj)
+    collect(1:1:length(obj))
+end
+
 # Similar to R's which(), but definitely not as safe.
 function which(logical)
     seq_len(length(logical))[logical .== 1]
@@ -21,7 +29,7 @@ end
 function weighted_mean(vals, weights)
     if length(vals) != length(weights) error("vals and weights must be the same length!") end
     valsum = 0
-    for i in seq_len(length(vals))
+    for i in seq_along(vals)
         valsum += (vals[i] * weights[i])
     end
     valsum / sum(weights)
@@ -44,43 +52,67 @@ function guess_filter(string, current_combo, word_list = words)
 end
 
 # Creates a regular expression to filter the word list.
-function build_regex(str, combo, all_letters = alphabet)
-    # Grey letters are removed from the list entirely
-    grey_letters = str[which(combo .== "grey")]
-    non_grey_letters = remove_letters(all_letters, grey_letters)
-    
+function build_regex(str, combo, all_letters = copy(abc))
     # The letters to use in the regex.
     possible_letters = Vector{String}(undef, 5)
     
     # Green letters are set.
-    for i in which(combo .== "green") possible_letters[i] = string(str[i]) end
+    green_ind = which(combo .== "green")
+    for i in green_ind
+        possible_letters[i] = "[" * string(str[i]) * "]"
+    end
+
+    # Grey letters are removed from the list entirely
+    grey_ind = which(combo .== "grey")
+    grey_letters = split(string(str[grey_ind]))
+    remove_grey_letters!(all_letters, grey_letters, green_ind)
     # Grey letters are set to the non-grey letters.
-    for i in which(combo .== "grey") possible_letters[i] = str_c(non_grey_letters) end
+    for i in grey_ind
+        possible_letters[i] = str_c(all_letters[i, :])
+    end
+
     # Yellow letters are removed from the index in which they appear.
-    for i in which(combo .== "yellow") possible_letters[i] = str_c(remove_letters(non_grey_letters, string(str[i]))) end
+    for i in which(combo .== "yellow")
+        possible_letters[i] = str_c(remove_yellow_letters!(all_letters[i, :], string(str[i])))
+    end
     
-    # Each element of the array will be surrounded by brackets []
-    # to send to the regex.
-    str_c("[" .* possible_letters .* "]")
+    str_c(possible_letters)
 end
 
-# Creates a new array containing only those letters
-# not in to_remove by identifying the position of
-# the letter to remove in the array of letters.
-function remove_letters(letters, to_remove)
-    remove_letter_indexes = zeros(Int64, 5)
-    for i in seq_len(length(to_remove))
-        letter = string(to_remove[i])
-        ind = which(letters .== letter)
-        if(length(ind) != 0)
-            # The vector `ind` is guaranteed to be of length one.
-            global remove_letter_indexes[i] = ind[1]
-        else
-            global remove_letter_indexes[i] = 0
+# Sets the value in `abc` to "".
+# str_c() will remove letters for you!
+# (concatenating empty strings effectively removes them)
+function remove_grey_letters!(letters, to_remove, skipped)
+    for letter in to_remove
+        # Rows corresponding to green are skipped
+        for i in setdiff(seq_along(letters[:, 1]), skipped)
+            # j's bounds skip the square brackets
+            # (starting at the end because most remove letters
+            # should be at the end of the array).
+            for j in (length(letters[i, :]) - 1):-1:2
+                if letters[i, j] == letter
+                    letters[i, j] = ""
+                end
+            end
         end
     end
-    remove_letter_indexes = remove_letter_indexes[remove_letter_indexes .!= 0]
-    letters[setdiff(1:end, remove_letter_indexes)]
+end
+
+# A separate remove*() function is used for yellows
+# to avoid conditionals, boosting performance.
+# This function does nearly the same thing as
+# remove_grey_letters() but edits only one row
+# at a time and returns the mutated row.
+function remove_yellow_letters!(letters, to_remove)
+    # j's bounds skip the square brackets
+    # (starting at the end because most remove letters
+    # should be at the end of the array).
+    for j in (length(letters) - 1):-1:2
+        if letters[j] == to_remove
+            letters[j] = ""
+        end
+    end
+    letters
 end
 
 
@@ -104,7 +136,7 @@ unigrams = nothing
 sort!(words)
 sort!(weighted, :word)
 
-# A dictionary for fast and easy subsetting of word frequencies
+# A dictionary for fast and easy subsetting of word frequencies.
 weighted_dict = Dict{String, Int64}()
 rowindex = 1
 for word in words
@@ -114,7 +146,35 @@ end
 
 
 # Additional Data -------------------------------------------------------------
+# Letter ordering.
 alphabet = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
+# Goal: Identify the best opening letter order for
+# the regular expression, optimizing match speed.
+#
+# Create and populate a data frame with:
+# the letter,
+# the position in the word (1-5),
+# the frequency of the letter occurring at that position.
+num_rows = length(alphabet) * 5
+lettervals = DataFrame([Vector{String}(undef, num_rows),
+                        Vector{Int8}(undef, num_rows),
+                        Vector{Int64}(undef, num_rows)],
+                       [:letter, :position, :freq])
+index = 1
+for letter_ind in seq_len(5)
+    for letter in alphabet
+        lettervals[index, :] = [letter, letter_ind, sum(str_detect.(string.(SubString.(words, letter_ind, letter_ind)), letter))]
+        index += 1
+    end
+end
+lettervals = @orderby(lettervals, :position, -:freq)
+# Each row corresponds to the possible letters at each index,
+# surrounded by square brackets:
+abc = Array{String}(undef, 5, length(alphabet) + 2)
+for i in seq_len(5)
+    abc[i, :] = push!(pushfirst!(@subset(lettervals, :position .== i)[!, :letter], "["), "]")
+end
+
 # Color combinations.
 colors = ["green", "yellow", "grey"]
 # All potential match patterns that could be found. There are 243 of them
@@ -123,7 +183,7 @@ colors = ["green", "yellow", "grey"]
 # You can assign an undefined string matrix, but you'll have to assign
 # values to each index before you will be allowed to subset it.
 color_combos = Array{String}(undef, 243, 5)
-num_colors = seq_len(length(colors))
+num_colors = seq_along(colors)
 rowindex = 1
 for i in num_colors, j in num_colors, k in num_colors, l in num_colors, m in num_colors
     color_combos[rowindex, seq_len(5)] = [colors[i], colors[j], colors[k], colors[l], colors[m]] 

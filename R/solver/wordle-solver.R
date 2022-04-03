@@ -8,7 +8,7 @@ if(!require(dplyr)) install.packages("dplyr"); library(dplyr)
 if(!require(JuliaCall)) install.packages("JuliaCall"); library(JuliaCall)
 if(!require(data.table)) install.packages("data.table"); library(data.table)
 if(!require(fastmatch)) install.packages("fastmatch"); library(fastmatch)
-`%in%` <- fastmatch::`%fin%`
+`%in%` <- `%fin%`
 
 
 # Import Data -----------------------------------------------------------------
