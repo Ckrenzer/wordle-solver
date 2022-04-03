@@ -62,3 +62,5 @@ My biggest difficulties with the language come from subsettting. R's subsetting 
 - Consider making a very large file that contains all possible scores. (That's really expensive. Do ti for the top 10 words in each round? That can all be written to multiple files ((one file would be too big for github)). The run name would be the only difference).
 
 - Consider adding a constant for the length of a string (5).
+
+- Consider making the color combos an Int8 or other really quick data type to speed up comparisons.
