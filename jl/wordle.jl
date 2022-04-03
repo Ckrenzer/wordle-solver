@@ -8,6 +8,11 @@ import Dates
 # Functions -------------------------------------------------------------------
 include("simple_stringr.jl")
 
+# Provides the elapsed time in seconds since the start
+function time_from_start(start)
+    round((Dates.DateTime(Dates.now()) - Dates.DateTime(start)) / Dates.Millisecond(1) * (1 / 1000), digits = 4)
+end
+
 # The same as R's seq_len(), but probably not as safe.
 function seq_len(num::Integer)
     collect(1:1:num)
@@ -207,7 +212,6 @@ remaining
 num_remaining = zeros(Int64, num_combos)
 word_scores = Dict{String, Float64}()
 for word in words
-    println("Word: " * word * "    Time: " * Dates.format(Dates.now(), "HH:MM"))
     for i in indexes
         num_remaining[i] = length(guess_filter(word, color_combos[i, :]))
     end
@@ -218,13 +222,17 @@ end
 # Calculates the weighted proportion of words remaining.
 word_counts = sum(weighted.count)
 word_weights = Dict{String, Float64}()
+start = Dates.now()
+word_ind = 1
 for word in words
-    println("Word: " * word * "    Time: " * Dates.format(Dates.now(), "HH:MM"))
+    # Print the elapsed time since the beginning
+    println("Word: " * word * "    Time from start: " * string(time_from_start(start)) * "    Word Number:" * string(word_ind))
     for i in indexes
         num_remaining[i] = sum(get_freq(guess_filter(word, color_combos[i, :])))
     end
     proportion_of_words_remaining = num_remaining ./ word_counts
     word_weights[word] = weighted_mean(proportion_of_words_remaining, num_remaining)
+    word_ind += 1
 end
 
 
