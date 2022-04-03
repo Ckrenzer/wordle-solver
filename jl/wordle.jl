@@ -50,37 +50,44 @@ end
 
 # Takes the user's guess and filters down to the remaining possible words
 # based on the input word and color combo.
-function guess_filter(string, current_combo, word_list = words)
-    if(length(string) != 5) error("You must use a five letter word!") end
-    rgx = build_regex(string, current_combo)
+function guess_filter(str, current_combo, word_list = words)
+    if(length(str) != 5) error("You must use a five letter word!") end
+    
+    # Identify the color to which each letter corresponds
+    green_ind = which(combo .== "green")
+    yellow_ind = which(combo .== "yellow")
+    grey_ind = which(combo .== "grey")
+    
+    rgx = build_regex(str, green_ind, yellow_ind, grey_ind)
     remaining_words = str_subset(word_list, Regex(rgx))
 
     # Ensure that the yellow letters were found
-    remaining_words[str_detect.(remaining_words, PUT_SOMETHING_HERE!!!)]
+    for yellow_letter in unique(string.(str_split(str[yellow_ind], "")))
+        remaining_words = str_subset(remaining_words, yellow_letter)
+    end
+    remaining_words
 end
 
 # Creates a regular expression to filter the word list.
-function build_regex(str, combo, all_letters = copy(abc))
+function build_regex(str, green_ind, yellow_ind, grey_ind, all_letters = copy(abc))
     # The letters to use in the regex.
     possible_letters = Vector{String}(undef, 5)
     
     # Green letters are set.
-    green_ind = which(combo .== "green")
     for i in green_ind
         possible_letters[i] = "[" * string(str[i]) * "]"
     end
 
     # Grey letters are removed from the list entirely
-    grey_ind = which(combo .== "grey")
     grey_letters = split(string(str[grey_ind]))
     remove_grey_letters!(all_letters, grey_letters, green_ind)
     # Grey letters are set to the non-grey letters.
     for i in grey_ind
         possible_letters[i] = str_c(all_letters[i, :])
     end
-
+    
     # Yellow letters are removed from the index in which they appear.
-    for i in which(combo .== "yellow")
+    for i in yellow_ind
         possible_letters[i] = str_c(remove_yellow_letters!(all_letters[i, :], string(str[i])))
     end
     
