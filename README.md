@@ -49,6 +49,11 @@ My biggest difficulties with the language come from subsettting. R's subsetting 
 
 # Next Steps
 
+
+SINCE LAST TIME
+: implement the functionality to take a user's guess and returned color pattern, filter down to the remaining guesses, and provide the words with the highest score.
+
+
 -   Fix simple_stringr.jl and only keep those functions that were used in the script.
 
 - Get app running without needing to read in data from a url.
@@ -64,3 +69,5 @@ My biggest difficulties with the language come from subsettting. R's subsetting 
 - Consider adding a constant for the length of a string (5).
 
 - Consider making the color combos an Int8 or other really quick data type to speed up comparisons.
+
+- Split wordle.jl out into multiple scripts.

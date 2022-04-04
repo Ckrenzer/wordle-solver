@@ -42,9 +42,32 @@ end
 
 
 # Wordle Functions ------------------------------------------------------------
+# Finds the weighted proportion of words remaining
+function calculate_scores(words = remaining_words, freq_total = word_counts, combo_indexes = combo_indexes)
+    num_words = length(words)
+    word_ind = 1
+    start = Dates.now()
+    num_remaining = Vector{Int64}(undef, num_combos)
+    word_weights = Dict{String, Float64}()
+
+    for word in words
+        # Print the elapsed time since beginning the calculation
+        println("Word: " * word * "    Time from start: " * string(time_from_start(start)) * "    Word " * string(word_ind) * " of " * string(num_words))
+        word_ind += 1
+
+        for i in combo_indexes
+            num_remaining[i] = sum(get_freq(guess_filter(word, color_combos[i, :])))
+        end
+        proportion_of_words_remaining = num_remaining ./ freq_total
+        word_weights[word] = weighted_mean(proportion_of_words_remaining, num_remaining)
+
+    end
+    DataFrame(word = collect(keys(word_weights)), weighted_prop = collect(values(word_weights)))
+end
+
 # Runs a query on the `weighted` data frame and returns
 # the word frequency for each of the input words.
-function get_freq(terms, dictionary = weighted_dict)
+function get_freq(terms, dictionary)
     getindex.(Ref(dictionary), terms)
 end
 
@@ -144,20 +167,13 @@ unigrams = CSV.read("data/raw/unigram_freq.csv", DataFrame)
 subset!(unigrams, :word => ByRow(x -> length.(x) .== 5))
 weighted = leftjoin(DataFrame(word = words), unigrams, on = :word)
 replace!(weighted.count, missing => 0)
+word_counts = sum(weighted.count)
 unigrams = nothing
 
 # All words will be in alphabetical order.
 # This enables sharing of indexes across multiple objects.
 sort!(words)
 sort!(weighted, :word)
-
-# A dictionary for fast and easy subsetting of word frequencies.
-weighted_dict = Dict{String, Int64}()
-rowindex = 1
-for word in words
-    weighted_dict[word] = weighted[rowindex, 2]
-    rowindex += 1
-end
 
 
 # Additional Data -------------------------------------------------------------
@@ -207,59 +223,7 @@ end
 num_combos = length(color_combos[:, 1])
 
 
-# Calculations ----------------------------------------------------------------
-# The number of words remaining for all possible color combinations on one word
-# ("feens" in this case). If the value is zero, that means there isn't a word
-# in the list that provides a match for the given word and pattern.
-indexes = seq_len(num_combos)
-remaining = zeros(Int64, num_combos)
-for i in indexes
-    remaining[i] = length(guess_filter("feens", color_combos[i, :]))
-end
-remaining
-
-# Calculates the proportion of words remaining for each word.
-num_remaining = zeros(Int64, num_combos)
-word_scores = Dict{String, Float64}()
-for word in words
-    for i in indexes
-        num_remaining[i] = length(guess_filter(word, color_combos[i, :]))
-    end
-    proportion_of_words_remaining = num_remaining ./ num_words
-    word_scores[word] = weighted_mean(proportion_of_words_remaining, num_remaining)
-end
-
-# Calculates the weighted proportion of words remaining.
-word_counts = sum(weighted.count)
-word_weights = Dict{String, Float64}()
-start = Dates.now()
-word_ind = 1
-for word in words
-    # Print the elapsed time since the beginning
-    println("Word: " * word * "    Time from start: " * string(time_from_start(start)) * "    Word Number:" * string(word_ind))
-    for i in indexes
-        num_remaining[i] = sum(get_freq(guess_filter(word, color_combos[i, :])))
-    end
-    proportion_of_words_remaining = num_remaining ./ word_counts
-    word_weights[word] = weighted_mean(proportion_of_words_remaining, num_remaining)
-    word_ind += 1
-end
-
-
-# Saving Results ---------------------------------------------------------------------
-u = DataFrame(word = collect(keys(word_scores)), unweighted_prop = collect(values(word_scores)), r = 1)
-w = DataFrame(word = collect(keys(word_weights)), weighted_prop = collect(values(word_weights)), r = 1)
-scores = leftjoin(u, w, on = :word)
+# Saving Results --------------------------------------------------------------
+scores = calculate_scores(words)
 leftjoin!(scores, weighted, on = :word)
-
-
-CSV.write("data/processed/word_scores.csv", scores)
-
-
-# The scores (calculated using the final results in the Calculations section).
-scores = CSV.read("data/processed/opening_word_scores.csv", DataFrame, header = true)
-
-# What is the best opening word, assuming the words are all equally likely?
-scores[scores.unweighted_score .== minimum(scores.unweighted_score), :]
-# How about when the words are weighted based on how often they're used?
-scores[scores.weighted_score .== minimum(scores.weighted_score), :]
+CSV.write("data/processed/opening_word_scores.csv", scores)
