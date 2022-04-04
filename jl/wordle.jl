@@ -27,7 +27,7 @@ end
 
 # Similar to R's which(), but definitely not as safe.
 function which(logical)
-    seq_len(length(logical))[logical .== 1]
+    seq_along(logical)[logical .== 1]
 end
 
 # Calculates the weighted mean. Fails if the input contains missing values.
@@ -50,7 +50,7 @@ end
 
 # Takes the user's guess and filters down to the remaining possible words
 # based on the input word and color combo.
-function guess_filter(str, current_combo, word_list = words)
+function guess_filter(str, combo, word_list = words)
     if(length(str) != 5) error("You must use a five letter word!") end
     
     # Identify the color to which each letter corresponds
@@ -79,7 +79,7 @@ function build_regex(str, green_ind, yellow_ind, grey_ind, all_letters = copy(ab
     end
 
     # Grey letters are removed from the list entirely
-    grey_letters = split(string(str[grey_ind]))
+    grey_letters = str_split(string(str[grey_ind]), "")
     remove_grey_letters!(all_letters, grey_letters, green_ind)
     # Grey letters are set to the non-grey letters.
     for i in grey_ind
@@ -246,7 +246,16 @@ for word in words
 end
 
 
-# Results ---------------------------------------------------------------------
+# Saving Results ---------------------------------------------------------------------
+u = DataFrame(word = collect(keys(word_scores)), unweighted_prop = collect(values(word_scores)), r = 1)
+w = DataFrame(word = collect(keys(word_weights)), weighted_prop = collect(values(word_weights)), r = 1)
+scores = leftjoin(u, w, on = :word)
+leftjoin!(scores, weighted, on = :word)
+
+
+CSV.write("data/processed/word_scores.csv", scores)
+
+
 # The scores (calculated using the final results in the Calculations section).
 scores = CSV.read("data/processed/opening_word_scores.csv", DataFrame, header = true)
 
