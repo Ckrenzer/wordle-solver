@@ -65,7 +65,7 @@ function calculate_scores(words = remaining_words, freq_total = word_counts, com
     DataFrame(word = collect(keys(word_weights)), weighted_prop = collect(values(word_weights)))
 end
 
-# Runs a query on the `weighted` data frame and returns
+# Runs a query on the dictionary storing the weights and returns
 # the word frequency for each of the input words.
 function get_freq(terms, dictionary)
     getindex.(Ref(dictionary), terms)
