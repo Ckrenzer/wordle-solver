@@ -168,6 +168,11 @@ subset!(unigrams, :word => ByRow(x -> length.(x) .== 5))
 weighted = leftjoin(DataFrame(word = words), unigrams, on = :word)
 replace!(weighted.count, missing => 0)
 word_counts = sum(weighted.count)
+# Storing the weights in a dictionary for quick access
+word_freq = Dict{String, Int64}()
+for i in seq_along(weighted.word)
+    word_freq[weighted.word[i]] = weighted.count[i]
+end
 unigrams = nothing
 
 # All words will be in alphabetical order.
