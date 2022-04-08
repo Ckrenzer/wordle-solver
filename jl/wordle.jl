@@ -104,26 +104,15 @@ function build_regex(str, green_ind, yellow_ind, grey_ind, all_letters = copy(ab
     # Grey letters are removed from the list entirely.
     # Positions with greys and yellows are set to the non-grey letters.
     for i in union(grey_ind, yellow_ind)
-        possible_letters[i] = str_c(all_letters[i, Not(remove_ind(str, all_letters[i, :], grey_ind))])
+        possible_letters[i] = str_c(setdiff(all_letters[i, :], only.(str_split(str[grey_ind], ""))))
     end
     
     # Yellow letters are removed from the index in which they appear.
     for i in yellow_ind
-        possible_letters[i] = str_c(all_letters[i, Not(remove_ind(str, all_letters[i, :], yellow_ind))])
+        possible_letters[i] = str_c(setdiff(all_letters[i, :], only.(str_split(str[yellow_ind], ""))))
     end
     
     str_c(possible_letters)
-end
-
-# Identifies the indexes in the letter matrix (`abc`) where the grey letters occur
-function remove_ind(str, letters, color_ind)
-    remove_ind = Array{Int64}(undef, length(color_ind))
-    index = 1
-    for i in color_ind
-        remove_ind[index] = which(letters .== str[i])[1]
-        index += 1
-    end
-    remove_ind
 end
 
 
