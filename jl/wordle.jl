@@ -92,7 +92,7 @@ function guess_filter(str, combo, word_list = words)
 end
 
 # Creates a regular expression to filter the word list.
-function build_regex(str, green_ind, yellow_ind, grey_ind, all_letters = copy(abc))
+function build_regex(str, green_ind, yellow_ind, grey_ind, all_letters = abc)
     # The letters to use in the regex.
     possible_letters = Vector{String}(undef, 5)
     
@@ -101,56 +101,18 @@ function build_regex(str, green_ind, yellow_ind, grey_ind, all_letters = copy(ab
         possible_letters[i] = "[" * string(str[i]) * "]"
     end
 
-    # Grey letters are removed from the list entirely
-    grey_letters = str_split(string(str[grey_ind]), "")
-    remove_grey_letters!(all_letters, grey_letters, green_ind)
-    # Grey letters are set to the non-grey letters.
-    for i in grey_ind
-        possible_letters[i] = str_c(all_letters[i, :])
+    # Grey letters are removed from the list entirely.
+    # Positions with greys and yellows are set to the non-grey letters.
+    for i in union(grey_ind, yellow_ind)
+        possible_letters[i] = str_c(setdiff(all_letters[i, :], str_split(str[grey_ind], "")))
     end
     
     # Yellow letters are removed from the index in which they appear.
     for i in yellow_ind
-        possible_letters[i] = str_c(remove_yellow_letters!(all_letters[i, :], string(str[i])))
+        possible_letters[i] = str_c(setdiff(all_letters[i, :], str_split(str[yellow_ind], "")))
     end
     
     str_c(possible_letters)
-end
-
-# Sets the value in `abc` to "".
-# str_c() will remove letters for you!
-# (concatenating empty strings effectively removes them)
-function remove_grey_letters!(letters, to_remove, skipped)
-    for letter in to_remove
-        # Rows corresponding to green are skipped
-        for i in setdiff(seq_along(letters[:, 1]), skipped)
-            # j's bounds skip the square brackets
-            # (starting at the end because most remove letters
-            # should be at the end of the array).
-            for j in (length(letters[i, :]) - 1):-1:2
-                if letters[i, j] == letter
-                    letters[i, j] = ""
-                end
-            end
-        end
-    end
-end
-
-# A separate remove*() function is used for yellows
-# to avoid conditionals, boosting performance.
-# This function does nearly the same thing as
-# remove_grey_letters() but edits only one row
-# at a time and returns the mutated row.
-function remove_yellow_letters!(letters, to_remove)
-    # j's bounds skip the square brackets
-    # (starting at the end because most remove letters
-    # should be at the end of the array).
-    for j in (length(letters) - 1):-1:2
-        if letters[j] == to_remove
-            letters[j] = ""
-        end
-    end
-    letters
 end
 
 
