@@ -77,9 +77,9 @@ function guess_filter(str, combo, word_list = words)
     if(length(str) != 5) error("You must use a five letter word!") end
     
     # Identify the color to which each letter corresponds
-    green_ind = which(combo .== "green")
-    yellow_ind = which(combo .== "yellow")
-    grey_ind = which(combo .== "grey")
+    green_ind = which(combo .== 0)
+    yellow_ind = which(combo .== 1)
+    grey_ind = which(combo .== 2)
     
     rgx = build_regex(str, green_ind, yellow_ind, grey_ind)
     remaining_words = str_subset(word_list, Regex(rgx))
@@ -177,7 +177,10 @@ for i in seq_len(5)
 end
 
 # Color combinations.
-colors = ["green", "yellow", "grey"]
+# 0 is "green"
+# 1 is "yellow"
+# 2 is "grey"
+colors = [0, 1, 2]
 # All potential match patterns that could be found. There are 243 of them
 # (3^5)--an option for each color and five letters in the word.
 color_combos = Array{String}(undef, 243, 5)
