@@ -43,7 +43,7 @@ end
 
 # Wordle Functions ------------------------------------------------------------
 # Finds the weighted proportion of words remaining
-function calculate_scores(words = remaining_words, freq_total = word_counts, combo_indexes = combo_indexes)
+function calculate_scores(words = remaining_words, word_freq = word_freq, freq_total = word_counts)
     num_words = length(words)
     word_ind = 1
     start = Dates.now()
@@ -55,8 +55,8 @@ function calculate_scores(words = remaining_words, freq_total = word_counts, com
         println("Word: " * word * "    Time from start: " * string(time_from_start(start)) * "    Word " * string(word_ind) * " of " * string(num_words))
         word_ind += 1
         
-        for i in combo_indexes
-            num_remaining[i] = sum(get_freq(guess_filter(word, color_combos[i, :])))
+        for i in seq_along(color_combos[:, 1])
+            num_remaining[i] = sum(get_freq(guess_filter(word, color_combos[i, :]), word_freq))
         end
         proportion_of_words_remaining = num_remaining ./ freq_total
         word_weights[word] = weighted_mean(proportion_of_words_remaining, num_remaining)
@@ -141,6 +141,11 @@ subset!(unigrams, :word => ByRow(x -> length.(x) .== 5))
 weighted = leftjoin(DataFrame(word = words), unigrams, on = :word)
 replace!(weighted.count, missing => 0)
 word_counts = sum(weighted.count)
+# Storing the weights in a dictionary for quick access
+word_freq = Dict{String, Int64}()
+for i in seq_along(weighted.word)
+    word_freq[weighted.word[i]] = weighted.count[i]
+end
 unigrams = nothing
 
 # All words will be in alphabetical order.
