@@ -180,10 +180,10 @@ end
 # 0 is "green"
 # 1 is "yellow"
 # 2 is "grey"
-colors = [0, 1, 2]
+colors = Vector{Int8}([0, 1, 2])
 # All potential match patterns that could be found. There are 243 of them
 # (3^5)--an option for each color and five letters in the word.
-color_combos = Array{String}(undef, 243, 5)
+color_combos = Array{Int8}(undef, 243, 5)
 num_colors = seq_along(colors)
 rowindex = 1
 for i in num_colors, j in num_colors, k in num_colors, l in num_colors, m in num_colors
