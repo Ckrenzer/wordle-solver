@@ -49,18 +49,18 @@ function calculate_scores(words = remaining_words, freq_total = word_counts, com
     start = Dates.now()
     num_remaining = Vector{Int64}(undef, num_combos)
     word_weights = Dict{String, Float64}()
-
+    
     for word in words
         # Print the elapsed time since beginning the calculation
         println("Word: " * word * "    Time from start: " * string(time_from_start(start)) * "    Word " * string(word_ind) * " of " * string(num_words))
         word_ind += 1
-
+        
         for i in combo_indexes
             num_remaining[i] = sum(get_freq(guess_filter(word, color_combos[i, :])))
         end
         proportion_of_words_remaining = num_remaining ./ freq_total
         word_weights[word] = weighted_mean(proportion_of_words_remaining, num_remaining)
-
+        
     end
     DataFrame(word = collect(keys(word_weights)), weighted_prop = collect(values(word_weights)))
 end
@@ -83,7 +83,7 @@ function guess_filter(str, combo, word_list = words)
     
     rgx = build_regex(str, green_ind, yellow_ind, grey_ind)
     remaining_words = str_subset(word_list, Regex(rgx))
-
+    
     # Ensure that the yellow letters were found
     for yellow_letter in unique(string.(str_split(str[yellow_ind], "")))
         remaining_words = str_subset(remaining_words, yellow_letter)
@@ -98,59 +98,32 @@ function build_regex(str, green_ind, yellow_ind, grey_ind, all_letters = copy(ab
     
     # Green letters are set.
     for i in green_ind
-        possible_letters[i] = "[" * string(str[i]) * "]"
+        possible_letters[i] = "[" * str[i] * "]"
     end
-
-    # Grey letters are removed from the list entirely
-    grey_letters = str_split(string(str[grey_ind]), "")
-    remove_grey_letters!(all_letters, grey_letters, green_ind)
-    # Grey letters are set to the non-grey letters.
-    for i in grey_ind
-        possible_letters[i] = str_c(all_letters[i, :])
+    
+    # Grey letters are removed from the list entirely.
+    # Positions with greys and yellows are set to the non-grey letters.
+    for i in union(grey_ind, yellow_ind)
+        possible_letters[i] = str_c(all_letters[i, Not(remove_ind(str, all_letters[i, :], grey_ind))])
     end
     
     # Yellow letters are removed from the index in which they appear.
     for i in yellow_ind
-        possible_letters[i] = str_c(remove_yellow_letters!(all_letters[i, :], string(str[i])))
+        possible_letters[i] = str_c(all_letters[i, Not(remove_ind(str, all_letters[i, :], yellow_ind))])
     end
     
     str_c(possible_letters)
 end
 
-# Sets the value in `abc` to "".
-# str_c() will remove letters for you!
-# (concatenating empty strings effectively removes them)
-function remove_grey_letters!(letters, to_remove, skipped)
-    for letter in to_remove
-        # Rows corresponding to green are skipped
-        for i in setdiff(seq_along(letters[:, 1]), skipped)
-            # j's bounds skip the square brackets
-            # (starting at the end because most remove letters
-            # should be at the end of the array).
-            for j in (length(letters[i, :]) - 1):-1:2
-                if letters[i, j] == letter
-                    letters[i, j] = ""
-                end
-            end
-        end
+# Identifies the indexes in the letter matrix (`abc`) where the grey letters occur
+function remove_ind(str, letters, color_ind)
+    remove_ind = Array{Int64}(undef, length(color_ind))
+    index = 1
+    for i in color_ind
+        remove_ind[index] = which(letters .== str[i])[1]
+        index += 1
     end
-end
-
-# A separate remove*() function is used for yellows
-# to avoid conditionals, boosting performance.
-# This function does nearly the same thing as
-# remove_grey_letters() but edits only one row
-# at a time and returns the mutated row.
-function remove_yellow_letters!(letters, to_remove)
-    # j's bounds skip the square brackets
-    # (starting at the end because most remove letters
-    # should be at the end of the array).
-    for j in (length(letters) - 1):-1:2
-        if letters[j] == to_remove
-            letters[j] = ""
-        end
-    end
-    letters
+    remove_ind
 end
 
 
@@ -178,7 +151,7 @@ sort!(weighted, :word)
 
 # Additional Data -------------------------------------------------------------
 # Letter ordering.
-alphabet = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
+alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
 # Goal: Identify the best opening letter order for
 # the regular expression, optimizing match speed.
 #
@@ -190,23 +163,23 @@ alphabet = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n"
 # the position in the word (1-5),
 # the frequency of the letter occurring at that position.
 num_rows = length(alphabet) * 5
-lettervals = DataFrame([Vector{String}(undef, num_rows),
-                        Vector{Int8}(undef, num_rows),
-                        Vector{Int64}(undef, num_rows)],
-                       [:letter, :position, :freq])
+lettervals = DataFrame([Vector{Char}(undef, num_rows),
+Vector{Int8}(undef, num_rows),
+Vector{Int64}(undef, num_rows)],
+[:letter, :position, :freq])
 index = 1
 for letter_ind in seq_len(5)
     for letter in alphabet
-        lettervals[index, :] = [letter, letter_ind, sum(str_detect.(string.(SubString.(words, letter_ind, letter_ind)), letter))]
+        lettervals[index, :] = [letter, letter_ind, sum(str_detect.(SubString.(words, letter_ind, letter_ind), string(letter)))]
         index += 1
     end
 end
 lettervals = @orderby(lettervals, :position, -:freq)
 # Each row corresponds to the possible letters at each index,
 # surrounded by square brackets:
-abc = Array{String}(undef, 5, length(alphabet) + 2)
+abc = Array{Char}(undef, 5, length(alphabet) + 2)
 for i in seq_len(5)
-    abc[i, :] = push!(pushfirst!(@subset(lettervals, :position .== i)[!, :letter], "["), "]")
+    abc[i, :] = push!(pushfirst!(@subset(lettervals, :position .== i)[!, :letter], '['), ']')
 end
 
 # Color combinations.

@@ -81,6 +81,9 @@ end
 function str_split(string::String, pattern::Regex)
     split(string, pattern)
 end
+function str_split(str::Char, pattern::String)
+    [string(string)]
+end
 
 # Filters the input down to only those elements
 # where a match was found. Do not broadcast.
