@@ -31,3 +31,6 @@ Manifest.toml
 .Rdata
 .Rhistory
 R/rsconnect/
+
+# Profiling files
+statprof/
