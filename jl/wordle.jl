@@ -104,12 +104,12 @@ function build_regex(str, green_ind, yellow_ind, grey_ind, all_letters = copy(ab
     # Grey letters are removed from the list entirely.
     # Positions with greys and yellows are set to the non-grey letters.
     for i in union(grey_ind, yellow_ind)
-        possible_letters[i] = str_c(setdiff(all_letters[i, :], only.(str_split(str[grey_ind], ""))))
+        possible_letters[i] = str_c(setdiff(all_letters[i, :], str[grey_ind], ""))
     end
     
     # Yellow letters are removed from the index in which they appear.
     for i in yellow_ind
-        possible_letters[i] = str_c(setdiff(all_letters[i, :], only.(str_split(str[yellow_ind], ""))))
+        possible_letters[i] = str_c(setdiff(all_letters[i, :], str[yellow_ind]))
     end
     
     str_c(possible_letters)
