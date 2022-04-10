@@ -92,7 +92,7 @@ function guess_filter(str, combo, word_list = words)
 end
 
 # Creates a regular expression to filter the word list.
-function build_regex(str, green_ind, yellow_ind, grey_ind, all_letters = copy(abc))
+function build_regex(str, green_ind, yellow_ind, grey_ind, all_letters = abc)
     # The letters to use in the regex.
     possible_letters = Vector{String}(undef, 5)
     
