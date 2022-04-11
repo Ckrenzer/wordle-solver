@@ -56,7 +56,7 @@ function calculate_scores(words = remaining_words, word_freq = word_freq, freq_t
         word_ind += 1
         
         for i in seq_along(color_combos[:, 1])
-            num_remaining[i] = sum(get_freq(guess_filter(word, color_combos[i, :]), word_freq))
+            num_remaining[i] = sum(get_freq(guess_filter(word, color_combos[i, :], words), word_freq))
         end
         proportion_of_words_remaining = num_remaining ./ freq_total
         word_weights[word] = weighted_mean(proportion_of_words_remaining, num_remaining)
