@@ -67,3 +67,5 @@ SINCE LAST TIME
 - Consider adding a constant for the length of a string (5).
 
 - Split wordle.jl out into multiple scripts.
+
+- As the number of remaining guesses dwindles down, consider changing how words are weighted. Add more weight to the individual words' frequencies instead of the amount of information that particular guess would provide.
