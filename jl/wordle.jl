@@ -73,7 +73,7 @@ end
 
 # Takes the user's guess and filters down to the remaining possible words
 # based on the input word and color combo.
-function guess_filter(str, combo, word_list = words)
+function guess_filter(str, combo, word_list)
     if(length(str) != 5) error("You must use a five letter word!") end
     
     # Identify the color to which each letter corresponds
