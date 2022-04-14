@@ -19,8 +19,6 @@ function seq_len(num::Integer)
 end
 
 # The same as R's seq_along(), but probably not as safe.
-# Code fails in surprising ways when you have a length
-# zero input.
 function seq_along(obj)
     collect(1:1:length(obj))
 end
@@ -94,6 +92,8 @@ end
 # Creates a regular expression to filter the word list.
 function build_regex(str, green_ind, yellow_ind, grey_ind, all_letters = abc)
     # The letters to use in the regex.
+    # Each element corresponds to a character class with
+    # the possible letters given the color indexes.
     possible_letters = Vector{String}(undef, 5)
     
     # Green letters are set.
@@ -101,15 +101,22 @@ function build_regex(str, green_ind, yellow_ind, grey_ind, all_letters = abc)
         possible_letters[i] = "[" * str[i] * "]"
     end
     
-    # Grey letters are removed from the list entirely.
-    # Positions with greys and yellows are set to the non-grey letters.
-    for i in union(grey_ind, yellow_ind)
-        possible_letters[i] = str_c(setdiff(all_letters[i, :], str[grey_ind]))
+    # Grey letters are removed from the list entirely
+    # (removes grey letters from all rows of letters
+    # in the letter matrix--we skip rows corresponding
+    # to green letters because green rows aren't used).
+    for i in grey_ind
+        grey_letter = str[i]
+        for j in union(grey_ind, yellow_ind)
+            all_letters[j, all_letters[j, :] .== grey_letter] .= ' '
+        end
+        possible_letters[i] = str_remove_all(str_c(all_letters[i, :]), " ")
     end
     
     # Yellow letters are removed from the index in which they appear.
     for i in yellow_ind
-        possible_letters[i] = str_c(setdiff(all_letters[i, :], str[yellow_ind]))
+        all_letters[i, all_letters[i, :] .== str[i]] .= ' '
+        str_remove_all(str_c(all_letters[i, :]), " ")
     end
     
     str_c(possible_letters)
@@ -158,9 +165,9 @@ alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n'
 # the frequency of the letter occurring at that position.
 num_rows = length(alphabet) * 5
 lettervals = DataFrame([Vector{Char}(undef, num_rows),
-                        Vector{Int8}(undef, num_rows),
-                        Vector{Int64}(undef, num_rows)],
-                       [:letter, :position, :freq])
+Vector{Int8}(undef, num_rows),
+Vector{Int64}(undef, num_rows)],
+[:letter, :position, :freq])
 index = 1
 for letter_ind in seq_len(5)
     for letter in alphabet
