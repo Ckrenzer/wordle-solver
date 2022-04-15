@@ -102,21 +102,20 @@ function build_regex(str, green_ind, yellow_ind, grey_ind, all_letters = abc)
     end
     
     # Grey letters are removed from the list entirely
-    # (removes grey letters from all rows of letters
-    # in the letter matrix--we skip rows corresponding
-    # to green letters because green rows aren't used).
     for i in grey_ind
-        grey_letter = str[i]
         for j in union(grey_ind, yellow_ind)
-            all_letters[j, all_letters[j, :] .== grey_letter] .= ' '
+            all_letters[j, all_letters[j, :] .== str[i]] .= ' '
         end
+    end
+    # The rows corresponding to greys are set to the non-grey letters
+    for i in grey_ind
         possible_letters[i] = str_remove_all(str_c(all_letters[i, :]), " ")
     end
-    
+
     # Yellow letters are removed from the index in which they appear.
     for i in yellow_ind
         all_letters[i, all_letters[i, :] .== str[i]] .= ' '
-        str_remove_all(str_c(all_letters[i, :]), " ")
+        possible_letters[i] = str_remove_all(str_c(all_letters[i, :]), " ")
     end
     
     str_c(possible_letters)
@@ -182,6 +181,8 @@ abc = Array{Char}(undef, 5, length(alphabet) + 2)
 for i in seq_len(5)
     abc[i, :] = push!(pushfirst!(@subset(lettervals, :position .== i)[!, :letter], '['), ']')
 end
+# Keep a copy for game resetting
+abc_full = copy(abc)
 
 # Color combinations.
 # 0 is "green"
