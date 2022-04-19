@@ -79,7 +79,7 @@ function guess_filter(str, combo, word_list)
     yellow_ind = which(combo .== 1)
     grey_ind = which(combo .== 2)
     
-    rgx = build_regex(str, green_ind, yellow_ind, grey_ind)
+    rgx = build_regex(str, green_ind, yellow_ind, grey_ind, copy(abc))
     remaining_words = str_subset(word_list, Regex(rgx))
     
     # Ensure that the yellow letters were found
@@ -90,7 +90,7 @@ function guess_filter(str, combo, word_list)
 end
 
 # Creates a regular expression to filter the word list.
-function build_regex(str, green_ind, yellow_ind, grey_ind, all_letters = abc)
+function build_regex(str, green_ind, yellow_ind, grey_ind, all_letters)
     # The letters to use in the regex.
     # Each element corresponds to a character class with
     # the possible letters given the color indexes.
@@ -100,25 +100,29 @@ function build_regex(str, green_ind, yellow_ind, grey_ind, all_letters = abc)
     for i in green_ind
         possible_letters[i] = "[" * str[i] * "]"
     end
-    
+    # Remove ruled out letters
+    remove_letters!(str, yellow_ind, grey_ind, all_letters)
+    # Assign remaining letters
+    for i in union(grey_ind, yellow_ind)
+        possible_letters[i] = str_remove_all(str_c(all_letters[i, :]), " ")
+    end
+
+    str_c(possible_letters)
+end
+
+# Eliminates grey and yellow letters as possibilities at relevant indexes
+# (updates abc)
+function remove_letters!(str, yellow_ind, grey_ind, all_letters)
     # Grey letters are removed from the list entirely
     for i in grey_ind
         for j in union(grey_ind, yellow_ind)
             all_letters[j, all_letters[j, :] .== str[i]] .= ' '
         end
     end
-    # The rows corresponding to greys are set to the non-grey letters
-    for i in grey_ind
-        possible_letters[i] = str_remove_all(str_c(all_letters[i, :]), " ")
-    end
-
     # Yellow letters are removed from the index in which they appear.
     for i in yellow_ind
         all_letters[i, all_letters[i, :] .== str[i]] .= ' '
-        possible_letters[i] = str_remove_all(str_c(all_letters[i, :]), " ")
     end
-    
-    str_c(possible_letters)
 end
 
 
