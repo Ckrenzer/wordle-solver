@@ -19,7 +19,7 @@ shiny::runGitHub(repo = "wordle-solver",
 *Note: You will need to have Julia installed for this app to function on your local machine.*
 
 
-Calculating all possible outcomes would take a day or so to run on my laptop, from my flawed estimates (namely, 18e6 / (12947 * 1.1) / 60: I'm guestimating there are 18 million outcomes, my algo can run 12947 * 1.1 words per hour, and there are 60 minutes in an hour obviously == 21 hours). It may take some time before I'm ready to run something like this.
+Calculating all possible outcomes would take ten days so to run on my laptop, from my flawed estimates (namely, (12947 * 1.1) / 60 / 24: I'm guestimating there are 18 million outcomes, my algo can run 12947 * 1.1 words per hour, and there are 60 minutes in an hour obviously == 21 hours). It may take some time before I'm ready to run something like this.
 
 
 # Motivations
