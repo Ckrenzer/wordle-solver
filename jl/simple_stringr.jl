@@ -45,10 +45,7 @@ function str_length(string)
 end
 
 # Remove all matches of pattern from string.
-function str_remove_all(string::String, pattern::String)
-    str_replace_all(string, pattern, "")
-end
-function str_remove_all(string::String, pattern::Regex)
+function str_remove_all(string::String, pattern)
     str_replace_all(string, pattern, "")
 end
 function str_remove_all!(string::Vector{String}, pattern::String)
@@ -92,10 +89,7 @@ end
 # but an implementation is provided to be thorough.
 # Both return vectors for consistency--this function
 # is intended for vectors and should return a vector.
-function str_subset(string::Vector{String}, pattern::String)
-    string[str_detect.(string, pattern)]
-end
-function str_subset(string::Vector{String}, pattern::Regex)
+function str_subset(string, pattern)
     string[str_detect.(string, pattern)]
 end
 function str_subset(string::String, pattern::String)
