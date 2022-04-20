@@ -49,26 +49,18 @@ My biggest difficulties with the language come from subsettting. R's subsetting 
 
 # Next Steps
 
+- Consider consider a way to input the results and get the color combo to send to next_guess() back from the website.
 
-SINCE LAST TIME
-: implement the functionality to take a user's guess and returned color pattern, filter down to the remaining guesses, and provide the words with the highest score.
+- Review notes, thoughts, and new ideas for functionality in subsequent_guesses.jl.
 
-
--   Fix simple_stringr.jl and only keep those functions that were used in the script.
+- Fix simple_stringr.jl and only keep those functions that were used in the script.
 
 - Get app running without needing to read in data from a url.
 
-- try to make subsequent guesses better. Your current solver uses words that give the most information about the full data set, not the remaining choices.
-
-- Ensure the player 'loses' after 6 guesses?
-
-- Consider making a very large file that contains all possible scores. (That's really expensive. Do ti for the top 10 words in each round? That can all be written to multiple files ((one file would be too big for github)). The run name would be the only difference).
+- Ensure the player 'loses' after 6 guesses? Not sure if that is the point of this solver.
 
 - Consider adding a constant for the length of a string (5).
 
 - Split wordle.jl out into multiple scripts.
 
 - As the number of remaining guesses dwindles down, consider changing how words are weighted. Add more weight to the individual words' frequencies instead of the amount of information that particular guess would provide.
-
-
-- The `abc` matrix needs to be updated after each call to `calculate_scores()`.
