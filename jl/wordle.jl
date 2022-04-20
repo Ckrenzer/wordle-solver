@@ -131,7 +131,7 @@ end
 open("data/raw/wordle_list.txt") do file
     global words = read(file, String)
 end
-words = string.(str_split(words, "\r\n"))
+words = string.(str_split(words, "\n"))
 num_words = length(words)
 
 # Word counts to use as weights.
