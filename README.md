@@ -59,6 +59,6 @@ My biggest difficulties with the language come from subsettting. R's subsetting 
 
 - Ensure the player 'loses' after 6 guesses? Not sure if that is the point of this solver.
 
-- Consider adding a constant for the length of a string (5).
+- Consider adding a constant for the length of a string (5). Not just a constant for that. We want as many constants running around in the code as possible! For example, a constant called 'gr' with a value of zero that indicates that zero corresponds to green letters.
 
 - As the number of remaining guesses dwindles down, consider changing how words are weighted. Add more weight to the individual words' frequencies instead of the amount of information that particular guess would provide.
