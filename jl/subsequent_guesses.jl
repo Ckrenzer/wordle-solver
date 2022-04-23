@@ -1,5 +1,3 @@
-
-
 # Args:
 # guess -- The word with the highest score in the `scores` data frame.
 # combo -- The results of `guess` after entering it into wordle.
