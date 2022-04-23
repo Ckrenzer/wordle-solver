@@ -1,5 +1,3 @@
-scores = CSV.read("data/processed/opening_word_scores.csv", DataFrame)
-abc = copy(abc_full)
 
 
 # Args:
@@ -15,7 +13,7 @@ function next_guess(guess, combo, scores, abc)
     # results of the previous guesses carry through the remainder of the game.
     remove_letters!(guess, which(combo .== 1), which(combo .== 2), abc)
     leftover_words = guess_filter(guess, combo, scores[:, :word])
-
+    
     # Find the number of uses of each word in the English lanugage
     freq_vals = weighted[in.(weighted.word, Ref(leftover_words)), :]
     leftover_word_counts = sum(freq_vals.count)
@@ -24,10 +22,12 @@ function next_guess(guess, combo, scores, abc)
     for i in seq_along(freq_vals[:, 1])
         word_freq[freq_vals.word[i]] = freq_vals.count[i]
     end
-
+    
     # Recalculate scores for the guess that provides the most information
     # about the remaining words
-    @orderby(calculate_scores(leftover_words, word_freq, leftover_word_counts), :weighted_prop)
+    new_scores = calculate_scores(leftover_words, word_freq, leftover_word_counts)
+    leftjoin!(new_scores, weighted, on = :word)
+    new_scores = @orderby(new_scores, :weighted_prop)
 end
 
 # Only the combo should change--consider a way to input the results
@@ -45,7 +45,7 @@ end
 #   When there are few words, fewer than ... 10? Choose the word that has the highest word count.
 scores = sort!(CSV.read("data/processed/opening_word_scores.csv", DataFrame), :weighted_prop)
 abc = copy(abc_full)
-scores = next_guess(scores.word[1], [2, 1, 1, 1, 2], scores, abc)
-scores = next_guess(scores.word[1], [2, 0, 1, 0, 2], scores, abc)
+scores = next_guess(scores.word[1], [2, 2, 0, 2, 2], scores, abc)
+scores = next_guess(scores.word[1], [2, 0, 0, 0, 2], scores, abc)
 scores = next_guess(scores.word[1], [2, 0, 2, 0, 0], scores, abc)
 scores = next_guess(scores.word[1], [2, 0, 2, 0, 0], scores, abc)
