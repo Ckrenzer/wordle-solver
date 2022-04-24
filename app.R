@@ -1,5 +1,6 @@
+# This solution requires a Julia installation. Built under Julia 1.7.1.
+
 # Packages --------------------------------------------------------------------
-# This solution requires a Julia installation. This was built under Julia 1.7.1.
 if(!require(shiny)) install.packages("shiny"); library(shiny)
 if(!require(shinycssloaders)) install.packages("shinycssloaders"); library(shinycssloaders)
 if(!require(shinyjs)) install.packages("shinyjs"); library(shinyjs)
@@ -20,7 +21,6 @@ new_game <- function(){
   # Reset the letter matrix, abc, to the unedited original
   julia_eval('scores = sort!(CSV.read("data/processed/opening_word_scores.csv", DataFrame), :weighted_prop)')
   julia_eval("abc = copy(abc_full)")
-  invisible(NULL)
 }
 
 # Update the combo
@@ -38,10 +38,9 @@ update_scores <- function(guess){
 # Load the data into Julia and R at the start of the session
 new_game()
 scores <- julia_eval("scores")
-# Create a dictionary to assign the words values based on the color
-# of the input, since radioButtons() requires all values to be strings:
-cv <- structure(.Data = c(0, 1, 2),
-                names = c("green", "yellow", "grey"))
+# A dictionary that assigns the colors numeric values based on the input.
+# Necessary because radioButtons() requires all values to be strings:
+cv <- structure(.Data = c(0, 1, 2), names = c("green", "yellow", "grey"))
 
 
 # UI --------------------------------------------------------------------------
