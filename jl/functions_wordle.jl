@@ -1,3 +1,37 @@
+# Finds the weighted proportion of words remaining
+# after accounting for the results of a previous guess.
+#
+# This function returns an updated `scores` data
+# frame and modfies `abc` in-place.
+#
+# Args:
+# guess -- The most recent word input to the game
+#          (This should be the word with the highest score in the `scores` data frame).
+# combo -- The results of `guess` after entering it into wordle.
+# scores -- The data frame containing the remaining words and their scores.
+# abc -- The letter matrix containing the remaining letters.
+function update_scores(guess, combo, scores, abc)
+    # Removes ruled out letters based on the combo--this makes the
+    # results of the previous guesses carry through the remainder of the game.
+    remove_letters!(guess, which(combo .== 1), which(combo .== 2), abc)
+    leftover_words = guess_filter(guess, combo, scores[:, :word])
+    
+    # Find the number of uses of each word in the English lanugage
+    freq_vals = weighted[in.(weighted.word, Ref(leftover_words)), :]
+    leftover_word_counts = sum(freq_vals.count)
+    # Storing the weights in a dictionary for quick access
+    word_freq = Dict{String, Int64}()
+    for i in seq_along(freq_vals[:, 1])
+        word_freq[freq_vals.word[i]] = freq_vals.count[i]
+    end
+    
+    # Recalculate scores for the guess that provides the most information
+    # about the remaining words
+    new_scores = calculate_scores(leftover_words, word_freq, leftover_word_counts)
+    leftjoin!(new_scores, weighted, on = :word)
+    new_scores = @orderby(new_scores, :weighted_prop)
+end
+
 # Finds the weighted proportion of words remaining.
 function calculate_scores(words = remaining_words, word_freq = word_freq, freq_total = word_counts)
     num_words = length(words)

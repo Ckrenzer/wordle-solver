@@ -1,3 +1,6 @@
+# This script gets called by scripts whose name starts with 'calculate'.
+# This script loads in all required packages, functions, and data.
+
 # Packages and Functions ------------------------------------------------------
 using CSV
 using DataFrames

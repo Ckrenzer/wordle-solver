@@ -13,14 +13,14 @@ end
 
 # Count the number of occurrences of pattern
 # in string.
-function str_count(string::String, pattern::Regex)
-    length(collect(eachmatch(pattern, string)))
+function str_count(str::String, pattern::Regex)
+    length(collect(eachmatch(pattern, str)))
 end
 
 # Basically a vectorized contains() but with that sweet,
 # sweet stringr naming convention
-function str_detect(string, pattern)    
-    contains(string, pattern)
+function str_detect(str, pattern)    
+    contains(str, pattern)
 end
 
 # Extract the pattern in string. The pattern must
@@ -30,8 +30,8 @@ end
 # particularly by predefining the data type for m
 # and replacing the conditional statement, but the
 # function works as intended.
-function str_extract_all(string, pattern)
-    m = match(pattern, string)
+function str_extract_all(str, pattern)
+    m = match(pattern, str)
     if(!isnothing(m))
         m.match
     else
@@ -40,46 +40,46 @@ function str_extract_all(string, pattern)
 end
 
 # Return the number of characters in each element of the string vector.
-function str_length(string)
-    length(string)
+function str_length(str)
+    length(str)
 end
 
 # Remove all matches of pattern from string.
-function str_remove_all(string::String, pattern)
-    str_replace_all(string, pattern, "")
+function str_remove_all(str::String, pattern)
+    str_replace_all(str, pattern, "")
 end
-function str_remove_all!(string::Vector{String}, pattern::String)
-    string = str_replace_all!(string, pattern, "")
+function str_remove_all!(str::Vector{String}, pattern::String)
+    str = str_replace_all!(str, pattern, "")
 end
-function str_remove_all!(string::Vector{String}, pattern::Regex)
-    str_replace_all!(string, pattern, "")
+function str_remove_all!(str::Vector{String}, pattern::Regex)
+    str_replace_all!(str, pattern, "")
 end
 
 # Replaces all matches of pattern in string with replacement.
-function str_replace_all(string::String, pattern::String, replacement::String)
-    replace(string, pattern => replacement)
+function str_replace_all(str::String, pattern::String, replacement::String)
+    replace(str, pattern => replacement)
 end
-function str_replace_all(string::String, pattern::Regex, replacement::String)
-    replace(string, pattern => replacement)
+function str_replace_all(str::String, pattern::Regex, replacement::String)
+    replace(str, pattern => replacement)
 end
-function str_replace_all!(string::Vector{String}, pattern::String, replacement::String)
-    string .= replace.(string, pattern => replacement)
+function str_replace_all!(str::Vector{String}, pattern::String, replacement::String)
+    str .= replace.(str, pattern => replacement)
 end
-function str_replace_all!(string::Vector{String}, pattern::Regex, replacement::String)
-    string .= replace.(string, pattern => replacement)
+function str_replace_all!(str::Vector{String}, pattern::Regex, replacement::String)
+    str .= replace.(str, pattern => replacement)
 end
 
 # Breaks a string into different elements separated by a delimiter.
 #
 # Basically stringr::str_split(s, pattern = p, n = Inf, simplify = TRUE)
-function str_split(string::String, pattern::String)
-    split(string, pattern)
+function str_split(str::String, pattern::String)
+    split(str, pattern)
 end
-function str_split(string::String, pattern::Regex)
-    split(string, pattern)
+function str_split(str::String, pattern::Regex)
+    split(str, pattern)
 end
 function str_split(str::Char, pattern::String)
-    [string(string)]
+    [string(str)]
 end
 
 # Filters the input down to only those elements
@@ -89,35 +89,35 @@ end
 # but an implementation is provided to be thorough.
 # Both return vectors for consistency--this function
 # is intended for vectors and should return a vector.
-function str_subset(string, pattern)
-    string[str_detect.(string, pattern)]
+function str_subset(str, pattern)
+    string[str_detect.(str, pattern)]
 end
-function str_subset(string::String, pattern::String)
-    if(str_detect(string, pattern))
-        [string]
+function str_subset(str::String, pattern::String)
+    if(str_detect(str, pattern))
+        [str]
     else
         Vector{String}(undef, 1)
     end
 end
-function str_subset(string::String, pattern::Regex)
-    if(str_detect(string, pattern))
-        [string]
+function str_subset(str::String, pattern::Regex)
+    if(str_detect(str, pattern))
+        [str]
     else
         Vector{String}(undef, 1)
     end
 end
 
 # Converts strings to lower case.
-function str_to_lower(string)
-    lowercase(string)
+function str_to_lower(str)
+    lowercase(str)
 end
 
 # Converts strings to title case.
-function str_to_title(string)
-    titlecase(string)
+function str_to_title(str)
+    titlecase(str)
 end
 
 # Converts strings to upper case.
-function str_to_upper(string)
-    uppercase(string)
+function str_to_upper(str)
+    uppercase(str)
 end
