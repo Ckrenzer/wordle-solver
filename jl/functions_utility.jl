@@ -1,3 +1,8 @@
+# Contains rough equivalent for some handy R functions
+# as well as the weighted mean. I'm surprised that a
+# weighted mean isn't included in Julia's standard
+# library.
+
 # Provides the elapsed time in seconds from `start`.
 function time_from_start(start)
     round((Dates.DateTime(Dates.now()) - Dates.DateTime(start)) / Dates.Millisecond(1) * (1 / 1000), digits = 4)

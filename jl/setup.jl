@@ -1,5 +1,5 @@
-# This script gets called by scripts whose name starts with 'calculate'.
 # This script loads in all required packages, functions, and data.
+# It gets called by scripts whose name starts with 'calculate'.
 
 # Packages and Functions ------------------------------------------------------
 using CSV
