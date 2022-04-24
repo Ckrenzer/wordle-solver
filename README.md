@@ -12,7 +12,6 @@ You can see the solver with [this link](https://7phynv-connor0krenzer.shinyapps.
 if(!require(shiny)) install.packages("shiny")
 shiny::runGitHub(repo = "wordle-solver",
                  username = "Ckrenzer",
-                 subdir = "R/app",
                  ref = "main")
 ```
 
