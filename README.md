@@ -69,3 +69,7 @@ My biggest difficulties with the language come from subsettting. R's subsetting 
 - Replace as much of the length(obj) stuff with constants.
 
 - Allow the user to determine the graph he/she would like to see. Perhaps through the table that's printed? Or some other way?
+
+- Consolidate the graph. You are sharing (copying) objects from one language to another like it's nobody's business. Consolidation is key.
+
+- Find ways to make the R code look cleaner. The Julia code looks alright, aside from functions_stringr.jl.
