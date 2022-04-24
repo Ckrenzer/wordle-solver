@@ -66,3 +66,7 @@ My biggest difficulties with the language come from subsettting. R's subsetting 
 - Add logic to break ties when words provide the same amount of information by using the word counts.
 
 - Do not include words that have a term frequency of zero beyond three guesses.
+
+- Replace as much of the length(obj) stuff with constants.
+
+- Allow the user to determine the graph he/she would like to see. Perhaps through the table that's printed? Or some other way?
