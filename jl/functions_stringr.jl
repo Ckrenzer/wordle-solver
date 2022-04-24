@@ -90,7 +90,7 @@ end
 # Both return vectors for consistency--this function
 # is intended for vectors and should return a vector.
 function str_subset(str, pattern)
-    string[str_detect.(str, pattern)]
+    str[str_detect.(str, pattern)]
 end
 function str_subset(str::String, pattern::String)
     if(str_detect(str, pattern))

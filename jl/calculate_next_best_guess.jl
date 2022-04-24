@@ -4,10 +4,10 @@
 #
 # This script is included for easier debugging, easier reference,
 # and to provide a checkpoint to start back up should a native
-# julia app be created.
+# julia app be desired for some future project.
 include("setup.jl")
 scores = sort!(CSV.read("data/processed/opening_word_scores.csv", DataFrame), :weighted_prop)
 abc = copy(abc_full)
 # Update the combo after each guess:
-combo = [0, 0, 0, 0, 0]
+combo = Int8.([0, 0, 0, 0, 0])
 scores = update_scores(scores.word[1], combo, scores, abc)

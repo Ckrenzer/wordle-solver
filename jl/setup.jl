@@ -2,6 +2,8 @@
 #
 # It calls all scripts whose name starts with 'functions'.
 # It gets called by all scripts whose name starts with 'calculate'.
+# It gets called by the shiny app in R.
+
 
 # Packages and Functions ------------------------------------------------------
 using CSV
