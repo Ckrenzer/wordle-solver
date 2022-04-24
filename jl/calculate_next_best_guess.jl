@@ -1,12 +1,13 @@
-include("setup.jl")
-# Supply default values when a row in abc contains all blanks...?
+# The shiny app does not call this script, but it uses the
+# code in this script to determine the guess that narrows
+# down possibilities the most.
 #
-# Thoughts:
-#   Add logic to break ties when words provide the same amount of information by using the word counts.
-#   When there are few words, fewer than ... 10? Choose the word that has the highest word count.
+# This script is included for easier debugging, easier reference,
+# and to provide a checkpoint to start back up should a native
+# julia app be created.
+include("setup.jl")
 scores = sort!(CSV.read("data/processed/opening_word_scores.csv", DataFrame), :weighted_prop)
 abc = copy(abc_full)
-scores = update_scores(scores.word[1], [2, 2, 0, 2, 2], scores, abc)
-scores = update_scores(scores.word[1], [2, 0, 0, 0, 2], scores, abc)
-scores = update_scores(scores.word[1], [2, 0, 2, 0, 0], scores, abc)
-scores = update_scores(scores.word[1], [2, 0, 2, 0, 0], scores, abc)
+# Update the combo after each guess:
+combo = [0, 0, 0, 0, 0]
+scores = update_scores(scores.word[1], combo, scores, abc)

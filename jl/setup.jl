@@ -62,7 +62,7 @@ index = 1
 for letter_ind in seq_len(5)
     for letter in alphabet
         lettervals[index, :] = [letter, letter_ind, sum(str_detect.(SubString.(words, letter_ind, letter_ind), string(letter)))]
-        index += 1
+        global index += 1
     end
 end
 lettervals = @orderby(lettervals, :position, -:freq)
@@ -87,6 +87,6 @@ num_colors = seq_along(colors)
 rowindex = 1
 for i in num_colors, j in num_colors, k in num_colors, l in num_colors, m in num_colors
     color_combos[rowindex, seq_len(5)] = [colors[i], colors[j], colors[k], colors[l], colors[m]] 
-    rowindex += 1
+    global rowindex += 1
 end
 num_combos = length(color_combos[:, 1])
