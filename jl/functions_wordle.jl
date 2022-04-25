@@ -1,3 +1,7 @@
+# Contains the functions used to filter out words
+# and score remaining ones.
+
+
 # Finds the weighted proportion of words remaining
 # after accounting for the results of a previous guess.
 #
