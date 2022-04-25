@@ -48,13 +48,9 @@ My biggest difficulties with the language come from subsettting. R's subsetting 
 
 # Next Steps
 
-- Consider consider a way to input the results and get the color combo to send to next_guess() back from the website.
-
-- Review notes, thoughts, and new ideas for functionality in subsequent_guesses.jl.
-
 - Fix simple_stringr.jl and only keep those functions that were used in the script.
 
-- Get app running without needing to read in data from a url.
+- Get app running without needing to read in data from a url (on shinyapps.io).
 
 - Consider adding a constant for the length of a string (5). Not just a constant for that. We want as many constants running around in the code as possible! For example, a constant called 'gr' with a value of zero that indicates that zero corresponds to green letters.
 
@@ -64,9 +60,9 @@ My biggest difficulties with the language come from subsettting. R's subsetting 
 
 - Add logic to break ties when words provide the same amount of information by using the word counts.
 
-- Do not include words that have a term frequency of zero beyond three guesses.
+- Do not include words that have a term frequency of zero after the third guess.
 
-- Replace as much of the length(obj) stuff with constants.
+- Replace as much of the length(obj) stuff with constants as is feasible.
 
 - Allow the user to determine the graph he/she would like to see. Perhaps through the table that's printed? Or some other way?
 
