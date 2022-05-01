@@ -26,8 +26,8 @@ function update_scores(guess, combo, scores, abc)
     # Ensure some possibilities still exist.
     # If none exist, return an empty data frame.
     # If possibilities do exist, filter down the word list.
-    is_empty = Vector{Int8}(undef, length(abc[:, 1]))
-    for i in seq_along(abc[:, 1])
+    is_empty = Vector{Int8}(undef, num_characters)
+    for i in num_characters_seq
         is_empty[i] = str_remove_all(str_c(abc[1, :]), " ") == "[]"
     end
     if any(is_empty .== 1)
@@ -71,7 +71,7 @@ function calculate_scores(words = remaining_words, word_freq = word_freq, freq_t
         println("Word: " * word * "    Time from start: " * string(time_from_start(start)) * "    Word " * string(word_ind) * " of " * string(num_words))
         word_ind += 1
         
-        for i in seq_along(color_combos[:, 1])
+        for i in num_combos_seq
             num_remaining[i] = sum(get_freq(guess_filter(word, color_combos[i, :], words), word_freq))
         end
         proportion_of_words_remaining = num_remaining ./ freq_total
@@ -110,7 +110,7 @@ function build_regex(str, green_ind, yellow_ind, grey_ind, all_letters)
     # The letters to use in the regex.
     # Each element corresponds to a character class with
     # the possible letters given the color indexes.
-    possible_letters = Vector{String}(undef, 5)
+    possible_letters = Vector{String}(undef, num_characters)
     
     # Green letters are set.
     for i in green_ind

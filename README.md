@@ -50,20 +50,8 @@ My biggest difficulties with the language come from subsettting. R's subsetting 
 
 - Fix simple_stringr.jl and only keep those functions that were used in the script.
 
-- Get app running without needing to read in data from a url (on shinyapps.io).
-
 - Consider adding a constant for the length of a string (5). Not just a constant for that. We want as many constants running around in the code as possible! For example, a constant called 'gr' with a value of zero that indicates that zero corresponds to green letters.
-
-- Supply default values when a row in abc contains all blanks...?
 
 - Add logic to break ties when words provide the same amount of information by using the word counts.
 
-- Do not include words that have a term frequency of zero after the third guess.
-
 - Replace as much of the length(obj) stuff with constants as is feasible.
-
-- Allow the user to determine the graph he/she would like to see. Perhaps through the table that's printed? Or some other way?
-
-- Consolidate the graph. You are sharing (copying) objects from one language to another like it's nobody's business. Consolidation is key.
-
-- Find ways to make the R code look cleaner. The Julia code looks alright, aside from functions_stringr.jl.
