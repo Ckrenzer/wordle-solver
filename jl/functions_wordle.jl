@@ -51,7 +51,7 @@ function update_scores(guess, combo, scores, abc)
     leftjoin!(new_scores, weighted, on = :word)
     new_scores = @orderby(new_scores, :weighted_prop)
 
-    if (nrow(new_scores) == 0) | (new_scores.weighted_prop[1] == -1)
+    if (nrow(new_scores) == 0) | all(new_scores.weighted_prop .== -1)
         DataFrame(word = "(no_words_remaining)", weighted_prop = -1, count = -1)
     else
         new_scores
@@ -89,9 +89,7 @@ end
 
 # Takes the user's guess and filters down to the remaining possible words
 # based on the input word and color combo.
-function guess_filter(str, combo, word_list)
-    if(length(str) != 5) error("You must use a five letter word!") end
-    
+function guess_filter(str, combo, word_list)    
     # Identify the color to which each letter corresponds.
     green_ind = which(combo .== 0)
     yellow_ind = which(combo .== 1)

@@ -54,8 +54,6 @@ My biggest difficulties with the language come from subsettting. R's subsetting 
 
 - Consider adding a constant for the length of a string (5). Not just a constant for that. We want as many constants running around in the code as possible! For example, a constant called 'gr' with a value of zero that indicates that zero corresponds to green letters.
 
-- As the number of remaining guesses dwindles down, consider changing how words are weighted. Add more weight to the individual words' frequencies instead of the amount of information that particular guess would provide.
-
 - Supply default values when a row in abc contains all blanks...?
 
 - Add logic to break ties when words provide the same amount of information by using the word counts.

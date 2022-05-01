@@ -151,13 +151,13 @@ server <- function(input, output) {
     # Calculates the proportion of remaining words for the input word
     remaining <- double(julia_eval("length(color_combos[:, 1])"))
     num_words <- sum(scores[["weighted_prop"]])
-    for(i in julia_eval("seq_along(color_combos[:, 1])")){
-      julia_assign(x = "i", value = i)
-      remaining_words <- julia_eval("guess_filter(scores.word[1], color_combos[i, :], words)")
-      remaining[i] <- sum(scores[scores$word %in% remaining_words, "weighted_prop"])
-    }
-    proportion_of_words_remaining <- remaining / num_words
-    
+      for(i in julia_eval("seq_along(color_combos[:, 1])")){
+        julia_assign(x = "i", value = i)
+        remaining_words <- julia_eval("guess_filter(scores.word[1], color_combos[i, :], words)")
+        remaining[i] <- sum(scores[scores$word %in% remaining_words, "weighted_prop"])
+      }
+      proportion_of_words_remaining <- remaining / num_words
+      
     # Plots the weighted proportion of words remaining for the input word
     ggplot(mapping = aes(x = reorder(seq_along(remaining),
                                      -proportion_of_words_remaining),
