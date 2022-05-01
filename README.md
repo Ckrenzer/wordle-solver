@@ -6,7 +6,7 @@ Oh, and for the record: I never looked at 3Blue1Brown's code--the code you see i
 
 # The Solver
 
-You can see the solver with [this link](https://7phynv-connor0krenzer.shinyapps.io/Wordle-Solver/) when it is hosted on shinyapps.io, or you can paste the following code into your R console:
+You can see the solver by pasting the following code into your R console (this is no longer hosted on shinyapps.io):
 
 ```
 if(!require(shiny)) install.packages("shiny")
@@ -49,5 +49,3 @@ My biggest difficulties with the language come from subsettting. R's subsetting 
 # Next Steps
 
 - Fix simple_stringr.jl and only keep those functions that were used in the script.
-
-- Simplify the plot loop in the shiny app.
