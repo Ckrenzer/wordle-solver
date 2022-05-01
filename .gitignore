@@ -30,7 +30,7 @@ Manifest.toml
 .Rproj.user
 .Rdata
 .Rhistory
-R/rsconnect/
+rsconnect/
 
 # Profiling files
 statprof/

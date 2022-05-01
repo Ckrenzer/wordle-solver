@@ -49,3 +49,5 @@ My biggest difficulties with the language come from subsettting. R's subsetting 
 # Next Steps
 
 - Fix simple_stringr.jl and only keep those functions that were used in the script.
+
+- Simplify the plot loop in the shiny app.
