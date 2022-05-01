@@ -51,7 +51,7 @@ function update_scores(guess, combo, scores, abc)
     leftjoin!(new_scores, weighted, on = :word)
     new_scores = @orderby(new_scores, :weighted_prop)
 
-    if nrow(new_scores) == 0
+    if (nrow(new_scores) == 0) | (new_scores.weighted_prop[1] == -1)
         DataFrame(word = "(no_words_remaining)", weighted_prop = -1, count = -1)
     else
         new_scores
