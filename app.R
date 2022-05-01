@@ -10,7 +10,7 @@ if(!require(stringr)) install.packages("stringr"); library(stringr)
 if(!require(JuliaCall)) install.packages("JuliaCall"); library(JuliaCall)
 
 
-# Setup -----------------------------------------------------------------
+# Setup -----------------------------------------------------------------------
 julia_setup()
 # Loads all necessary Julia packages, functions, objects, etc., for the solver.
 julia_source("jl/setup.jl")
@@ -97,7 +97,7 @@ ui <- fluidPage(
   # Output --------------------------------------------------------------------
   mainPanel(
     # Prints the best guess to the console
-    verbatimTextOutput(outputId = "guess"),
+    verbatimTextOutput(outputId = "next_best_guess"),
     
     # Plots the information distribution for the remaining
     # words of the current guess
@@ -114,7 +114,7 @@ ui <- fluidPage(
 server <- function(input, output) {
   
   
-  # Updating values based on clicking of an action button ---------------------
+  # Updating values based on the clicking of an action button -----------------
   # Supplies default values to 'df' and 'terms'
   df <- reactiveValues(data = julia_eval("scores"))
   terms <- reactiveValues(data = julia_eval("scores.word"))
@@ -173,14 +173,15 @@ server <- function(input, output) {
   
   
   # Displaying Output ---------------------------------------------------------
+  # Display if the checks pass.
   # The recommended word
-  output$guess <- renderPrint({cat("The best word to use is:", best_guess$data)})
+  output$next_best_guess <- renderPrint({cat("The best word to use is:", best_guess$data)})
   # The proportion plot
   output$word_plot <- renderPlot({proportion_plot()})
   # The top 10 remaining words and associated scores
   output$remaining_words <- renderTable({
     df$data %>% 
-      select(word, score = weighted_prop) %>%
+      select(word, score = weighted_prop, `# of Uses in English` = count) %>%
       mutate(score = 1 / score) %>% 
       arrange(-score) %>% 
       slice(1:10)

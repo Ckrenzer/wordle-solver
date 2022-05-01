@@ -15,10 +15,26 @@
 # scores -- The data frame containing the remaining words and their scores.
 # abc -- The letter matrix containing the remaining letters.
 function update_scores(guess, combo, scores, abc)
+    # After the first guess, we only want to include
+    # words with a count greater than zero.
+    new_scores = scores[scores.count .> 0, :]
+
     # Removes ruled out letters based on the combo--this makes the
     # results of the previous guesses carry through the remainder of the game.
     remove_letters!(guess, which(combo .== 1), which(combo .== 2), abc)
-    leftover_words = guess_filter(guess, combo, scores[:, :word])
+    
+    # Ensure some possibilities still exist.
+    # If none exist, return an empty data frame.
+    # If possibilities do exist, filter down the word list.
+    is_empty = Vector{Int8}(undef, length(abc[:, 1]))
+    for i in seq_along(abc[:, 1])
+        is_empty[i] = str_remove_all(str_c(abc[1, :]), " ") == "[]"
+    end
+    if any(is_empty .== 1)
+        return DataFrame(word = "(no_words_remaining)", weighted_prop = -1, count = -1)
+    else
+        leftover_words = guess_filter(guess, combo, new_scores[:, :word])
+    end
     
     # Find the number of uses of each word in the English lanugage
     freq_vals = weighted[in.(weighted.word, Ref(leftover_words)), :]
@@ -29,11 +45,17 @@ function update_scores(guess, combo, scores, abc)
         word_freq[freq_vals.word[i]] = freq_vals.count[i]
     end
     
-    # Recalculate scores for the guess that provides the most information
-    # about the remaining words
+    # Recalculate scores to find the guess that provides
+    #  the most information about the remaining words
     new_scores = calculate_scores(leftover_words, word_freq, leftover_word_counts)
     leftjoin!(new_scores, weighted, on = :word)
     new_scores = @orderby(new_scores, :weighted_prop)
+
+    if nrow(new_scores) == 0
+        DataFrame(word = "(no_words_remaining)", weighted_prop = -1, count = -1)
+    else
+        new_scores
+    end
 end
 
 # Finds the weighted proportion of words remaining.
@@ -102,7 +124,7 @@ function build_regex(str, green_ind, yellow_ind, grey_ind, all_letters)
     for i in union(grey_ind, yellow_ind)
         possible_letters[i] = str_remove_all(str_c(all_letters[i, :]), " ")
     end
-
+    
     str_c(possible_letters)
 end
 
