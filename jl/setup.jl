@@ -11,7 +11,10 @@ const global num_characters = 5
 const global num_characters_seq = collect(1:num_characters)
 # The possible colors:
 # (0 is "green"; 1 is "yellow"; 2 is "grey")
-const global colors = Vector{Int8}([0, 1, 2])
+const global grn = 0
+const global ylw = 1
+const global gry = 2
+const global colors = Vector{Int8}([grn, ylw, gry])
 # The number of possible color combinations:
 # (3^5--an option for each color and five letters in the word)
 const global num_combos = 3^num_characters

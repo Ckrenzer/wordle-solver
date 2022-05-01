@@ -49,9 +49,3 @@ My biggest difficulties with the language come from subsettting. R's subsetting 
 # Next Steps
 
 - Fix simple_stringr.jl and only keep those functions that were used in the script.
-
-- Consider adding a constant for the length of a string (5). Not just a constant for that. We want as many constants running around in the code as possible! For example, a constant called 'gr' with a value of zero that indicates that zero corresponds to green letters.
-
-- Add logic to break ties when words provide the same amount of information by using the word counts.
-
-- Replace as much of the length(obj) stuff with constants as is feasible.

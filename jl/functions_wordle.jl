@@ -49,7 +49,7 @@ function update_scores(guess, combo, scores, abc)
     #  the most information about the remaining words
     new_scores = calculate_scores(leftover_words, word_freq, leftover_word_counts)
     leftjoin!(new_scores, weighted, on = :word)
-    new_scores = @orderby(new_scores, :weighted_prop)
+    new_scores = @orderby(new_scores, :weighted_prop, :count)
 
     if (nrow(new_scores) == 0) | all(new_scores.weighted_prop .== -1)
         DataFrame(word = "(no_words_remaining)", weighted_prop = -1, count = -1)
@@ -91,9 +91,9 @@ end
 # based on the input word and color combo.
 function guess_filter(str, combo, word_list)    
     # Identify the color to which each letter corresponds.
-    green_ind = which(combo .== 0)
-    yellow_ind = which(combo .== 1)
-    grey_ind = which(combo .== 2)
+    green_ind = which(combo .== grn)
+    yellow_ind = which(combo .== ylw)
+    grey_ind = which(combo .== gry)
     
     rgx = build_regex(str, green_ind, yellow_ind, grey_ind, copy(abc))
     remaining_words = str_subset(word_list, Regex(rgx))
