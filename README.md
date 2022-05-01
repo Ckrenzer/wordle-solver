@@ -18,14 +18,11 @@ shiny::runGitHub(repo = "wordle-solver",
 *Note: You will need to have Julia installed for this app to function on your local machine.*
 
 
-Calculating all possible outcomes would take ten days so to run on my laptop, from my flawed estimates (namely, (12947 * 1.1) / 60 / 24: I'm guestimating there are 18 million outcomes, my algo can run 12947 * 1.1 words per hour, and there are 60 minutes in an hour obviously == 21 hours). It may take some time before I'm ready to run something like this.
-
-
 # Motivations
 
-I usually have a sense for how R behaves. The basics are pretty simple since almost every data structure is implemented with arrays, along with the fact that there are only four useful data types ('character', 'logical', 'integer', 'double'). Copy-on-modify semantics and the quote from John Chambers, "Everything that exists is an object. Everything that happens is a function call" allow users to draft up pretty coherent guiding principles when studying code.
+I usually have a sense for how R behaves. The basics are pretty simple since almost every data structure is implemented with an array, along with the fact that there are only four useful data types ('character', 'logical', 'integer', 'double'). Copy-on-modify semantics and the quote from John Chambers, "Everything that exists is an object. Everything that happens is a function call" allow users to draft up pretty coherent guiding principles when studying R code.
 
-Learning the syntax of a programming language is something best done through experience. I have not built up guiding intuition of how Julia reacts to different situations, however. It is for this purpose I made this solver.
+Learning the syntax of a programming language is something best done through experience. I do not have enough experience to determine how Julia functions in different situations, so it is for this purpose that I made the solver.
 
 # Data
 
@@ -35,15 +32,14 @@ I found term frequency data weighing the words on [Kaggle](https://www.kaggle.co
 
 ### Processed
 
-This directory contains the term frequency, unweighted score, and weighted score for each word in the Wordle list of acceptable answers. This was the most computationally expensive portion of the project. To identify the best opening word, each color pattern had to be tried to see the number of remaining words. My Julia algorithm takes .3 seconds to calculate a score for one word.
+This directory contains the term frequency and weighted proportion of words remaining (if you were to use that word as the opener, weighted on term frequency) for each word in the Wordle list of acceptable answers. This was the most computationally expensive portion of the project. To identify the best opening word, each color pattern had to be tried to see the number of remaining words. My Julia algorithm takes .3 seconds to calculate a score for one word when using the full word list.
 
-The score columns are average proportions of words remaining after choosing a particular word (the unweighted one being when all words are equally likely with the other being the weighted average of the proportion of remaining words--weighted on term frequency). To avoid having to explain the rules of golf, the 'score' you'll see in the app is just the inverse of the weighted score.
-
+To avoid having to explain the rules of golf, the 'score' you'll see in the app is just the inverse of the weighted score.
 
 # Thoughts
-I have *thoroughly* enjoyed using Julia. Using for loops and if statements without guilt sure feels nice! The Julia code runs nearly twice as fast as R, using similar approaches to my subsetting algorithm in both languages. And that's with very little experience with Julia's ins-and-outs.
+I have *thoroughly* enjoyed using Julia. Using for loops without suspicion or guilt sure feels nice! The Julia code runs nearly twice as fast as R, using similar approaches to my subsetting algorithm in both languages. And that's with very little experience with Julia's ins-and-outs.
 
-My biggest difficulties with the language come from subsettting. R's subsetting operations are very concise, but I've found that many of the Julia functions are not quite as user-friendly or robust, meaning I had to write custom functions for several subsetting operations.
+My biggest difficulties with the language come from subsettting. R's subsetting operations are very concise, but I've found that many of the Julia functions are not quite as user-friendly or robust, meaning I had to write custom functions for several subsetting operations. I look forward to learning more about the language, it's syntax, and ways to apply it to solve everyday problems!
 
 
 # Next Steps
