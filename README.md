@@ -40,8 +40,3 @@ To avoid having to explain the rules of golf, the 'score' you'll see in the app 
 I have *thoroughly* enjoyed using Julia. Using for loops without suspicion or guilt sure feels nice! The Julia code runs nearly twice as fast as R, using similar approaches to my subsetting algorithm in both languages. And that's with very little experience with Julia's ins-and-outs.
 
 My biggest difficulties with the language come from subsettting. R's subsetting operations are very concise, but I've found that many of the Julia functions are not quite as user-friendly or robust, meaning I had to write custom functions for several subsetting operations. I look forward to learning more about the language, it's syntax, and ways to apply it to solve everyday problems!
-
-
-# Next Steps
-
-- Fix simple_stringr.jl and only keep those functions that were used in the script.
