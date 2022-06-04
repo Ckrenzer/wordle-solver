@@ -18,6 +18,7 @@ const global colors = Vector{Int8}([grn, ylw, gry])
 # The number of possible color combinations:
 # (3^5--an option for each color and five letters in the word)
 const global num_combos = 3^num_characters
+const global num_combos_seq = collect(1:length(num_combos))
 
 
 # Packages and Functions ------------------------------------------------------

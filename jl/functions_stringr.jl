@@ -13,7 +13,7 @@ end
 
 # Basically a contains() alias but with
 # that sweet, sweet stringr naming convention
-function str_detect(str::String, pattern)    
+function str_detect(str, pattern)    
     contains(str, pattern)
 end
 
