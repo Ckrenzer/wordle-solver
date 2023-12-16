@@ -6,7 +6,7 @@
 # and to provide a checkpoint to start back up should a native
 # julia app be desired for some future project.
 include("setup.jl")
-scores = sort!(CSV.read("data/processed/opening_word_scores.csv", DataFrame), :weighted_prop)
+scores = sort!(CSV.read("data/opening_word_scores.csv", DataFrame), :expected_entropy)
 abc = copy(abc_full)
 # Update the combo after each guess:
 combo = Int8.([0, 0, 0, 0, 0])

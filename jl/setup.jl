@@ -33,14 +33,14 @@ include("jl/functions_wordle.jl")
 
 # Import Data -----------------------------------------------------------------
 # The list of possible answers.
-open("data/raw/wordle_list.txt") do file
+open("data/wordle_list.txt") do file
     global words = read(file, String)
 end
 words = string.(str_split(words, "\n"))
 num_words = length(words)
 
 # Word counts to use as weights.
-unigrams = CSV.read("data/raw/unigram_freq.csv", DataFrame)
+unigrams = CSV.read("data/unigram_freq.csv", DataFrame)
 subset!(unigrams, :word => ByRow(x -> length.(x) .== num_characters))
 weighted = leftjoin(DataFrame(word = words), unigrams, on = :word)
 replace!(weighted.count, missing => 0)

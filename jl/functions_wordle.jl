@@ -22,7 +22,7 @@ function update_scores(guess, combo, scores, abc)
     # Removes ruled out letters based on the combo--this makes the
     # results of the previous guesses carry through the remainder of the game.
     remove_letters!(guess, which(combo .== 1), which(combo .== 2), abc)
-    
+
     # Ensure some possibilities still exist.
     # If none exist, return an empty data frame.
     # If possibilities do exist, filter down the word list.
@@ -35,7 +35,7 @@ function update_scores(guess, combo, scores, abc)
     else
         leftover_words = guess_filter(guess, combo, new_scores[:, :word])
     end
-    
+
     # Find the number of uses of each word in the English lanugage
     freq_vals = weighted[in.(weighted.word, Ref(leftover_words)), :]
     leftover_word_counts = sum(freq_vals.count)
@@ -44,7 +44,7 @@ function update_scores(guess, combo, scores, abc)
     for i in seq_along(freq_vals[:, 1])
         word_freq[freq_vals.word[i]] = freq_vals.count[i]
     end
-    
+
     # Recalculate scores to find the guess that provides
     #  the most information about the remaining words
     new_scores = calculate_scores(leftover_words, word_freq, leftover_word_counts)
@@ -65,18 +65,18 @@ function calculate_scores(words = remaining_words, word_freq = word_freq, freq_t
     start = Dates.now()
     num_remaining = Vector{Int64}(undef, num_combos)
     word_weights = Dict{String, Float64}()
-    
+
     for word in words
         # Print the elapsed time since beginning the calculation.
         println("Word: " * word * "    Time from start: " * string(time_from_start(start)) * "    Word " * string(word_ind) * " of " * string(num_words))
         word_ind += 1
-        
+
         for i in num_combos_seq
             num_remaining[i] = sum(get_freq(guess_filter(word, color_combos[i, :], words), word_freq))
         end
         proportion_of_words_remaining = num_remaining ./ freq_total
         word_weights[word] = weighted_mean(proportion_of_words_remaining, num_remaining)
-        
+
     end
     DataFrame(word = collect(keys(word_weights)), weighted_prop = collect(values(word_weights)))
 end
@@ -94,10 +94,10 @@ function guess_filter(str, combo, word_list)
     green_ind = which(combo .== grn)
     yellow_ind = which(combo .== ylw)
     grey_ind = which(combo .== gry)
-    
+
     rgx = build_regex(str, green_ind, yellow_ind, grey_ind, copy(abc))
     remaining_words = str_subset(word_list, Regex(rgx))
-    
+
     # Ensure that the yellow letters were found.
     for yellow_letter in unique(string.(str_split(str[yellow_ind], "")))
         remaining_words = str_subset(remaining_words, yellow_letter)
@@ -111,7 +111,7 @@ function build_regex(str, green_ind, yellow_ind, grey_ind, all_letters)
     # Each element corresponds to a character class with
     # the possible letters given the color indexes.
     possible_letters = Vector{String}(undef, num_characters)
-    
+
     # Green letters are set.
     for i in green_ind
         possible_letters[i] = "[" * str[i] * "]"
@@ -122,7 +122,7 @@ function build_regex(str, green_ind, yellow_ind, grey_ind, all_letters)
     for i in union(grey_ind, yellow_ind)
         possible_letters[i] = str_remove_all(str_c(all_letters[i, :]), " ")
     end
-    
+
     str_c(possible_letters)
 end
 
