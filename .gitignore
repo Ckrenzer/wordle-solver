@@ -34,3 +34,6 @@ rsconnect/
 
 # Profiling files
 statprof/
+
+# awk partition files
+data/word_list_partition_a*
