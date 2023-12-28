@@ -6,11 +6,19 @@ source("r/play.R")
 best_opening_guess <- names(scores[scores == max(scores)][1L])
 color_dropdown <- list("Green" = "green", "Yellow" = "yellow", "Grey" = "grey")
 color_inputs <- sprintf("color%d", 1L:5L)
-default_color_prompt_string <- "<<choose color>>"
+default_color_prompt_string <- "[choose color]"
+insert_css_for_color_combo <- function(clr){
+    enhanced <- character(length(clr))
+    found <- clr %in% names(colors)
+    enhanced[found] <- sprintf("<span style='color:%s'>%s</span>", clr[found], clr[found])
+    enhanced[!found] <- sprintf("<span style='color:black'>%s</span>", clr[!found])
+    enhanced[clr == "yellow"] <- "<span style='color:#FFB90F'>yellow</span>"
+    enhanced
+}
 
 ui <- fluidPage(
   useShinyjs(),
-  titlePanel("Wordle Solver", windowTitle = "Wordle Solver"),
+  titlePanel("Wordle Assistant", windowTitle = "Wordle Assistant"),
   sidebarPanel(
     actionButton("new_game", label = "Click here to start a new game"),
     textInput("guess",       label = "Type your guess:",  placeholder = "audio"),
@@ -20,7 +28,7 @@ ui <- fluidPage(
     radioButtons("color3",   label = h3("Third Letter"),  choices = color_dropdown, selected = character(0L), inline = TRUE),
     radioButtons("color4",   label = h3("Fourth Letter"), choices = color_dropdown, selected = character(0L), inline = TRUE),
     radioButtons("color5",   label = h3("Fifth Letter"),  choices = color_dropdown, selected = character(0L), inline = TRUE),
-    verbatimTextOutput("color_combo"),
+    uiOutput("color_combo"),
     actionButton("update",   label = "Click here once you've selected a word and input the colors")
   ),
   mainPanel(
@@ -98,8 +106,8 @@ server <- function(input, output, session) {
   })
   # recalculate scores using new guess and the combo that wordle gave back for that guess
   observeEvent(input$update, {
-    {# when a repeating letter is both grey and non-grey, set the grey ones to yellow
-     # to be consistent with the implementation liberties discussed in r/play.R
+    {# when a repeating letter is both grey and non-grey, set the grey ones to yellow,
+     # consistent with the implementation liberties discussed in r/play.R
         combo <- c(selected_combo$color1, selected_combo$color2, selected_combo$color3, selected_combo$color4, selected_combo$color5)
         guess <- tolower(input$guess)
         split_guess <- split_words[[guess]]
@@ -147,25 +155,20 @@ server <- function(input, output, session) {
     })
   })
   # print currently selected colors
-  output$color_combo <- renderPrint({
-      cat(
-          sprintf("Color combo: {%s}",
-                  paste(
-                        local({
-                            selections <- c(selected_combo$color1, selected_combo$color2, selected_combo$color3, selected_combo$color4, selected_combo$color5)
-                            selected_colors <- names(colors[selections])
-                            selected_colors[is.na(selected_colors)] <- default_color_prompt_string
-                            val <- shown_input$current_selection
-                            if(is.null(selected_combo[[val]])){
-                                valnum <- as.integer(substr(val, nchar(val), nchar(val)))
-                                selected_colors[valnum] <- default_color_prompt_string
-                            }
-                            selected_colors
-                        }),
-                        collapse = ", "
-                  )
-          )
-      )
+  output$color_combo <- renderUI({
+      # ensure the color in the combo that is being selected tells the user to choose a color (except on the last one)
+      selections <- c(selected_combo$color1, selected_combo$color2, selected_combo$color3, selected_combo$color4, selected_combo$color5)
+      selected_colors <- names(colors[selections])
+      selected_colors[is.na(selected_colors)] <- default_color_prompt_string
+      val <- shown_input$current_selection
+      if(is.null(selected_combo[[val]])){
+          valnum <- as.integer(substr(val, nchar(val), nchar(val)))
+          selected_colors[valnum] <- default_color_prompt_string
+      }
+      combo_text <- insert_css_for_color_combo(selected_colors) |>
+          paste(collapse = ", ") |>
+          sprintf(fmt = "Color combo:<br>%s")
+      HTML(combo_text)
   })
   # print word info
   output$next_best_guess <- renderPrint({cat("The best word to use is:", best_guess$data)})

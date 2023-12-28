@@ -133,13 +133,12 @@ guess_filter <- function(guess, combo, remaining_words, remaining_letters, color
 }
 # calculate the bits of information gained for
 # each guess after checking it against each color combination.
-calculate_scores <- function(color_combos, remaining_words, remaining_letters, colors, split_words){
+calculate_scores <- function(color_combos, remaining_words, remaining_letters, colors, split_words, logfile){
     freq_total <- sum(remaining_words)
     cores <- parallel::detectCores()
     cl <- parallel::makeCluster(cores)
     doParallel::registerDoParallel(cl)
     on.exit(parallel::stopCluster(cl), add = TRUE)
-    logfile <- "log/progress_r.txt"
     if(file.exists(logfile)) file.remove(logfile)
     foreach::foreach(guess = names(remaining_words),
                      .export = c("elim",
@@ -246,7 +245,8 @@ update_scores <- function(guess, split_words, combo, remaining_words, remaining_
                                    remaining_words = remaining_words,
                                    remaining_letters = remaining_letters,
                                    colors = colors,
-                                   split_words = split_words)
+                                   split_words = split_words,
+                                   logfile = "")
     best_guess <- names(new_scores[new_scores == max(new_scores)])[1L]
     list(remaining_letters = remaining_letters,
          remaining_words = remaining_words,
@@ -260,7 +260,8 @@ if(!file.exists("data/opening_word_scores.csv")){
                                remaining_words = words,
                                remaining_letters = abc,
                                colors = colors,
-                               split_words = split_words)
+                               split_words = split_words,
+                               logfile = "log/progress_r.txt")
     data.frame(word = names(scores),
                expected_entropy = scores,
                frequency = words[names(scores)],
