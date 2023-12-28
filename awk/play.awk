@@ -32,8 +32,6 @@ BEGIN{
 }
 
 {
-    # tells us when we've finished loading the official words
-    # and have moved on to loading the frequencies.
     FILENUM += FNR == 1
 }
 
@@ -56,10 +54,11 @@ FILENUM == 3 {
 }
 
 END{
-    for(key in ABC) letters[key] = ABC[key]                # using   'ABC' only works for opening scores
-    for(word in words) remaining_words[word] = words[word] # using 'words' only works for opening scores
+    for(key in ABC) letters[key] = ABC[key]                #   'ABC' only works for opening scores
+    for(word in words) remaining_words[word] = words[word] # 'words' only works for opening scores
     for(word in remaining_words){
-        # we can pretend that this wouldn't give the same result as words[word]
+        # let's pretend that this wouldn't necessarily give the same result as words[word]
+        # (doing it this way is more convenient for calculating scores beyond the opening guess)
         freq_total += remaining_words[word]
     }
     for(guess in guesses){
@@ -124,7 +123,6 @@ END{
                 continue
             }
             # <<BUILD REGULAR EXPRESSION>>
-
             # <<FILTER TO MATCHED WORDS USING RGX AND IDENTIFY PROPORTION OF WORD FREQUENCIES REMAINING>>
             frequency_of_remaining_words_for_this_combo = 0
             for(word in remaining_words){

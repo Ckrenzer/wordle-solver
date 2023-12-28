@@ -1,0 +1,57 @@
+# Ensure the functions work as intended on realistic inputs
+stopifnot(
+          # str_subset
+          str_subset(c("hi", "hello", "bonjour"), "h", fixed = TRUE) == c("hi", "hello"),
+          str_subset(c("hi", "hhello", "bonjour"), "h{2,}") == "hhello",
+          # collapse_into_character_group
+          collapse_into_character_group("abc") == "[abc]",
+          # elim
+          elim(c("a", "b", "b", "b", "c"), c("a", "c")) == c("b", "b", "b"),
+          # build_regex
+          build_regex(guess = c("h", "e", "l", "i", "o"),
+                      combo = c(1L, 2L, 2L, 0L, 1L),
+                      remaining_letters = abc,
+                      colors = colors)$rgx == "[abcdfgijkmnopqrstuvwxyz][abcdfghijkmnopqrstuvwxyz][abcdfghijkmnopqrstuvwxyz][i][abcdfghijkmnpqrstuvwxyz]",
+          # guess_filter
+          guess_filter(guess = c("o", "c", "e", "a", "n"),
+                       combo = c(0L, 0L, 0L, 0L, 0L),
+                       remaining_words = words,
+                       remaining_letters = abc,
+                       colors = colors)$remaining_words == "ocean",
+          guess_filter(guess = c("o", "c", "e", "a", "n"),
+                       combo = c(0L, 0L, 1L, 0L, 0L),
+                       remaining_words = words,
+                       remaining_letters = abc,
+                       colors = colors)$remaining_words |> length() == 0L,
+          guess_filter(guess = c("o", "c", "e", "a", "n"),
+                       combo = c(0L, 0L, 2L, 0L, 0L),
+                       remaining_words = words,
+                       remaining_letters = abc,
+                       colors = colors)$remaining_words == "octan",
+          # calculate_scores
+          round(calculate_scores(color_combos = color_combos,
+                                 remaining_words = words[1L:5L],
+                                 remaining_letters = abc,
+                                 colors = colors,
+                                 split_words = split_words[1L:5L]), 1) == c(1.6, 1.6, 1.6, 1.6, 1),
+          round(calculate_scores_series(color_combos = color_combos,
+                                        remaining_words = words[1L:5L],
+                                        remaining_letters = abc,
+                                        colors = colors,
+                                        split_words = split_words[1L:5L]), 1) == c(1.6, 1.6, 1.6, 1.6, 1),
+          # update_scores
+          round(update_scores(guess = "ocean",
+                              split_words = split_words,
+                              combo = colors[c("yellow", "green", "grey", "grey", "green")],
+                              remaining_words = words,
+                              remaining_letters = abc,
+                              color_combos = color_combos,
+                              colors = colors)$new_scores, 2) == c(0.75, 0.75),
+          names(update_scores(guess = "ocean",
+                              split_words = split_words,
+                              combo = colors[c("yellow", "green", "grey", "grey", "green")],
+                              remaining_words = words,
+                              remaining_letters = abc,
+                              color_combos = color_combos,
+                              colors = colors)$new_scores) == c("scion", "scorn")
+)

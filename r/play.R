@@ -224,7 +224,7 @@ calculate_scores_series <- function(color_combos, remaining_words, remaining_let
 }
 # determine the next best guess to make after getting the color combo back from the game
 update_scores <- function(guess, split_words, combo, remaining_words, remaining_letters, color_combos, colors){
-    # only include words with a count greater than zero after the first guess (first guess will almost always be "tares" anyway)
+    # only include words with a count greater than zero after the first guess
     remaining_words <- remaining_words[remaining_words > 0L]
     if(length(remaining_words) == 0L){
         return("You ran out of words!")
@@ -237,71 +237,22 @@ update_scores <- function(guess, split_words, combo, remaining_words, remaining_
                             colors = colors)
     remaining_words <- remaining_words[updates[["remaining_words"]]]
     remaining_letters <- updates[["remaining_letters"]]
+    if(length(remaining_words) == 0L){
+        stop("Out of words!")
+    } else if(any(lengths(remaining_letters, use.names = FALSE) == 0L)){
+        stop("Out of letters!")
+    }
     new_scores <- calculate_scores(color_combos = color_combos,
                                    remaining_words = remaining_words,
                                    remaining_letters = remaining_letters,
                                    colors = colors,
                                    split_words = split_words)
-    list(new_scores = new_scores, remaining_words = remaining_words, remaining_letters = remaining_letters)
+    best_guess <- names(new_scores[new_scores == max(new_scores)])[1L]
+    list(remaining_letters = remaining_letters,
+         remaining_words = remaining_words,
+         new_scores = new_scores,
+         best_guess = best_guess)
 }
-
-# UNIT TESTS
-stopifnot(
-          # str_subset
-          str_subset(c("hi", "hello", "bonjour"), "h", fixed = TRUE) == c("hi", "hello"),
-          str_subset(c("hi", "hhello", "bonjour"), "h{2,}") == "hhello",
-          # collapse_into_character_group
-          collapse_into_character_group("abc") == "[abc]",
-          # elim
-          elim(c("a", "b", "b", "b", "c"), c("a", "c")) == c("b", "b", "b"),
-          # build_regex
-          build_regex(guess = c("h", "e", "l", "i", "o"),
-                      combo = c(1L, 2L, 2L, 0L, 1L),
-                      remaining_letters = abc,
-                      colors = colors)$rgx == "[abcdfgijkmnopqrstuvwxyz][abcdfghijkmnopqrstuvwxyz][abcdfghijkmnopqrstuvwxyz][i][abcdfghijkmnpqrstuvwxyz]",
-          # guess_filter
-          guess_filter(guess = c("o", "c", "e", "a", "n"),
-                       combo = c(0L, 0L, 0L, 0L, 0L),
-                       remaining_words = words,
-                       remaining_letters = abc,
-                       colors = colors)$remaining_words == "ocean",
-          guess_filter(guess = c("o", "c", "e", "a", "n"),
-                       combo = c(0L, 0L, 1L, 0L, 0L),
-                       remaining_words = words,
-                       remaining_letters = abc,
-                       colors = colors)$remaining_words |> length() == 0L,
-          guess_filter(guess = c("o", "c", "e", "a", "n"),
-                       combo = c(0L, 0L, 2L, 0L, 0L),
-                       remaining_words = words,
-                       remaining_letters = abc,
-                       colors = colors)$remaining_words == "octan",
-          # calculate_scores
-          round(calculate_scores(color_combos = color_combos,
-                                 remaining_words = words[1L:5L],
-                                 remaining_letters = abc,
-                                 colors = colors,
-                                 split_words = split_words[1L:5L]), 1) == c(1.6, 1.6, 1.6, 1.6, 1),
-          round(calculate_scores_series(color_combos = color_combos,
-                                        remaining_words = words[1L:5L],
-                                        remaining_letters = abc,
-                                        colors = colors,
-                                        split_words = split_words[1L:5L]), 1) == c(1.6, 1.6, 1.6, 1.6, 1),
-          # update_scores
-          round(update_scores(guess = "ocean",
-                              split_words = split_words,
-                              combo = colors[c("yellow", "green", "grey", "grey", "green")],
-                              remaining_words = words,
-                              remaining_letters = abc,
-                              color_combos = color_combos,
-                              colors = colors)$new_scores, 2) == c(0.75, 0.75),
-          names(update_scores(guess = "ocean",
-                              split_words = split_words,
-                              combo = colors[c("yellow", "green", "grey", "grey", "green")],
-                              remaining_words = words,
-                              remaining_letters = abc,
-                              color_combos = color_combos,
-                              colors = colors)$new_scores) == c("scion", "scorn")
-)
 
 # EXECUTION
 if(!file.exists("data/opening_word_scores.csv")){
@@ -322,81 +273,4 @@ if(!file.exists("data/opening_word_scores.csv")){
         word_info <- read.csv("data/opening_word_scores.csv")
         structure(word_info$expected_entropy, names = word_info$word)
     })
-}
-message("Instructions: input the value of best_guess into wordle and then update ",
-        "the value of color_combos_that_came_back_from_wordle (with your bug fix, ofc).")
-if(FALSE){
-    # 'updates' refer to the refresh of the inputs before going to the next guess.
-    # (the update_scores call on guess #1 has no bearing on the first guess, only subsequent guesses)
-    #
-    # guess #1
-    remaining_words <- words
-    remaining_letters <- abc
-    best_guess <- names(scores[scores == max(scores)][1L])
-    color_combo_that_came_back_from_wordle <- colors[c("grey", "grey", "grey", "grey", "grey")]
-    guess1 <- update_scores(guess = best_guess,
-                            split_words = split_words,
-                            combo = color_combo_that_came_back_from_wordle,
-                            remaining_words = remaining_words,
-                            remaining_letters = remaining_letters,
-                            color_combos = color_combos,
-                            colors = colors)
-    # guess #2
-    new_scores        <- guess1$new_scores
-    remaining_words   <- guess1$remaining_words
-    remaining_letters <- guess1$remaining_letters
-    best_guess <- names(new_scores[new_scores == max(new_scores)][1L])
-    color_combo_that_came_back_from_wordle <- colors[c("grey", "yellow", "grey", "yellow", "green")]
-    guess2 <- update_scores(guess = best_guess,
-                            split_words = split_words,
-                            combo = color_combo_that_came_back_from_wordle,
-                            remaining_words = remaining_words,
-                            remaining_letters = remaining_letters,
-                            color_combos = color_combos,
-                            colors = colors)
-    # guess #3
-    new_scores        <- guess2$new_scores
-    remaining_words   <- guess2$remaining_words
-    remaining_letters <- guess2$remaining_letters
-    best_guess <- names(new_scores[new_scores == max(new_scores)][1L])
-    color_combo_that_came_back_from_wordle <- colors[c("grey", "green", "green", "green", "green")]
-    guess3 <- update_scores(guess = best_guess,
-                            split_words = split_words,
-                            combo = color_combo_that_came_back_from_wordle,
-                            remaining_words = remaining_words,
-                            remaining_letters = remaining_letters,
-                            color_combos = color_combos,
-                            colors = colors)
-    # guess #4
-    new_scores        <- guess3$new_scores
-    remaining_words   <- guess3$remaining_words
-    remaining_letters <- guess3$remaining_letters
-    best_guess <- names(new_scores[new_scores == max(new_scores)][1L])
-    color_combo_that_came_back_from_wordle <- colors[c("grey", "yellow", "green", "grey", "grey")]
-    guess4 <- update_scores(guess = best_guess,
-                            split_words = split_words,
-                            combo = color_combo_that_came_back_from_wordle,
-                            remaining_words = remaining_words,
-                            remaining_letters = remaining_letters,
-                            color_combos = color_combos,
-                            colors = colors)
-    # guess #5
-    new_scores        <- guess4$new_scores
-    remaining_words   <- guess4$remaining_words
-    remaining_letters <- guess4$remaining_letters
-    best_guess <- names(new_scores[new_scores == max(new_scores)][1L])
-    color_combo_that_came_back_from_wordle <- colors[c("yellow", "yellow", "grey", "grey", "grey")]
-    guess5 <- update_scores(guess = best_guess,
-                            split_words = split_words,
-                            combo = color_combo_that_came_back_from_wordle,
-                            remaining_words = remaining_words,
-                            remaining_letters = remaining_letters,
-                            color_combos = color_combos,
-                            colors = colors)
-    # guess #6
-    new_scores        <- guess5$new_scores
-    remaining_words   <- guess5$remaining_words
-    remaining_letters <- guess5$remaining_letters
-    best_guess <- names(new_scores[new_scores == max(new_scores)][1L])
-    best_guess # this is your last guess!
 }

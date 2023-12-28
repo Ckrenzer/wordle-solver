@@ -14,8 +14,8 @@ function calculate(){
 }
 export -f calculate
 logfiles=()
-for((i = 1; i <= numprocesses; ++i)); do
-    file="log/progress_awk${i}.txt"
+for((i = 0; i < numprocesses; ++i)); do
+    file="log/progress_awk$((${i}+1)).txt"
     test -e "$file" && rm "$file"
     logfiles[i]="$file"
 done
@@ -23,9 +23,8 @@ outfile="data/opening_word_scores.tsv"
 awk 'BEGIN { print "word\texpected_entropy\tfrequency" }' > "$outfile"
 parallel --link calculate {1} {2} ::: data/word_list_partition* ::: "${logfiles[@]}" >> "$outfile"
 cat log/progress_awk*.txt > log/progress_awk.txt
-for((i = 1; i <= numprocesses; ++i)); do
-    file="log/progress_awk${i}.txt"
-    test -e "$file" && rm "$file"
+for file in "${logfiles[@]}"; do
+    test -e "${file}" && rm "${file}"
 done
 # gawk took around 26 minutes on my 8-core/16-threaded laptop
 # mawk took around 30 minutes on my 8-core/16-threaded laptop
