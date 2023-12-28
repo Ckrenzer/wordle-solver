@@ -38,6 +38,7 @@ ui <- fluidPage(
 )
 
 server <- function(input, output, session) {
+  session$onSessionEnded(function() stopApp())
   # supply default values
   shown_input <- reactiveValues(current_selection = "color1")
   selected_combo <- reactiveValues(color1 = NULL, color2 = NULL, color3 = NULL, color4 = NULL, color5 = NULL)
@@ -186,4 +187,5 @@ server <- function(input, output, session) {
   shinyjs::hide("color5")
 }
 
-shinyApp(ui = ui, server = server)
+app <- shinyApp(ui = ui, server = server)
+runApp(app, launch.browser = TRUE)
