@@ -26,9 +26,9 @@ using CSV
 using DataFrames
 using DataFramesMeta
 import Dates
-include("jl/functions_stringr.jl")
-include("jl/functions_utility.jl")
-include("jl/functions_wordle.jl")
+include("jl/original_solver/functions_stringr.jl")
+include("jl/original_solver/functions_utility.jl")
+include("jl/original_solver/functions_wordle.jl")
 
 
 # Import Data -----------------------------------------------------------------

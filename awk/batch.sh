@@ -22,9 +22,10 @@ done
 outfile="data/opening_word_scores.tsv"
 awk 'BEGIN { print "word\texpected_entropy\tfrequency" }' > "$outfile"
 parallel --link calculate {1} {2} ::: data/word_list_partition* ::: "${logfiles[@]}" >> "$outfile"
-cat log/progress_awk*.txt > log/progress_awk.txt
+logfile="log/progress_awk.txt"
+test -e "${logfile}" && rm "${logfile}"
+cat log/progress_awk*.txt > "${logfile}"
 for file in "${logfiles[@]}"; do
     test -e "${file}" && rm "${file}"
 done
-# gawk took around 26 minutes on my 8-core/16-threaded laptop
-# mawk took around 30 minutes on my 8-core/16-threaded laptop
+rm data/word_list_partition_*

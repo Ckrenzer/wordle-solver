@@ -34,6 +34,9 @@
 # PACKAGES
 library(doParallel)
 
+# COMMAND LINE ARGUMENTS
+run_calculation <- length(commandArgs(trailingOnly = TRUE)) > 0L # not very sophisticated
+
 # IMPORTANT 'CONSTANTS'
 num_characters <- 5L
 abc <- rep(list(letters), num_characters)
@@ -66,8 +69,9 @@ collapse_into_character_group <- function(lettervec){
 str_subset <- function(str, patt, fixed = FALSE){
     str[.Internal(grepl(patt, str, FALSE, FALSE, FALSE, fixed, FALSE, FALSE))]
 }
-print_log_info <- function(guess, logfile = ""){
-    msg <- sprintf("word: %s\ttime: %s\n", guess, strftime(Sys.time(), "%Y-%m-%d %H:%M:%S %Z"))
+print_log_info <- function(guess, start_time, logfile = ""){
+    end_time <- strftime(Sys.time(), "%Y-%m-%d %H:%M:%S %Z")
+    msg <- sprintf("word: %s\tstart: %s\tend: %s\n", guess, start_time, end_time)
     cat(msg, file = logfile, append = TRUE)
 }
 # fast and dangerous duplicated.default, useful because it will be called many times on small vectors
@@ -154,7 +158,7 @@ calculate_scores <- function(color_combos, remaining_words, remaining_letters, c
                      .combine = c,
                      .final = function(x) setNames(x, names(remaining_words))
                      ) %dopar% {
-        print_log_info(guess = guess, logfile = logfile)
+        start_time <- strftime(Sys.time(), "%Y-%m-%d %H:%M:%S %Z")
         # filter out impossible color combos--a grey letter cannot also be green or yellow
         split_guess <- split_words[[guess]]
         repeating_letters <- uniq(split_guess[duplicated(split_guess)])
@@ -181,16 +185,18 @@ calculate_scores <- function(color_combos, remaining_words, remaining_letters, c
         proportion_of_words_remaining <- frequency_of_remaining_words_by_combo / freq_total
         entropy <- log2(1 / proportion_of_words_remaining)
         entropy[is.infinite(entropy)] <- 0
-        sum(proportion_of_words_remaining * entropy)
+        expected_information <- sum(proportion_of_words_remaining * entropy)
+        print_log_info(guess = guess, start_time = start_time, logfile = logfile)
+        expected_information
     }
 }
 # same as above, but in series (zero dependencies, easier to debug)
-calculate_scores_series <- function(color_combos, remaining_words, remaining_letters, colors, split_words){
+calculate_scores_series <- function(color_combos, remaining_words, remaining_letters, colors, split_words, ...){
     freq_total <-    sum(remaining_words)
     num_words  <- length(remaining_words)
     expected_information <- structure(double(num_words), names = names(remaining_words))
     for(guess in names(remaining_words)){
-        print_log_info(guess)
+        start_time <- strftime(Sys.time(), "%Y-%m-%d %H:%M:%S %Z")
         # filter out impossible color combos--a grey letter cannot also be green or yellow
         split_guess <- split_words[[guess]]
         repeating_letters <- uniq(split_guess[duplicated(split_guess)])
@@ -218,11 +224,12 @@ calculate_scores_series <- function(color_combos, remaining_words, remaining_let
         entropy <- log2(1 / proportion_of_words_remaining)
         entropy[is.infinite(entropy)] <- 0
         expected_information[guess] <- sum(proportion_of_words_remaining * entropy)
+        print_log_info(guess = guess, start_time = start_time)
     }
     expected_information
 }
 # determine the next best guess to make after getting the color combo back from the game
-update_scores <- function(guess, split_words, combo, remaining_words, remaining_letters, color_combos, colors){
+update_scores <- function(guess, split_words, combo, remaining_words, remaining_letters, color_combos, colors, calculate_scores_fn){
     # only include words with a count greater than zero after the first guess
     remaining_words <- remaining_words[remaining_words > 0L]
     if(length(remaining_words) == 0L){
@@ -241,12 +248,12 @@ update_scores <- function(guess, split_words, combo, remaining_words, remaining_
     } else if(any(lengths(remaining_letters, use.names = FALSE) == 0L)){
         stop("Out of letters!")
     }
-    new_scores <- calculate_scores(color_combos = color_combos,
-                                   remaining_words = remaining_words,
-                                   remaining_letters = remaining_letters,
-                                   colors = colors,
-                                   split_words = split_words,
-                                   logfile = "")
+    new_scores <- calculate_scores_fn(color_combos = color_combos,
+                                      remaining_words = remaining_words,
+                                      remaining_letters = remaining_letters,
+                                      colors = colors,
+                                      split_words = split_words,
+                                      logfile = "")
     best_guess <- names(new_scores[new_scores == max(new_scores)])[1L]
     list(remaining_letters = remaining_letters,
          remaining_words = remaining_words,
@@ -255,7 +262,7 @@ update_scores <- function(guess, split_words, combo, remaining_words, remaining_
 }
 
 # EXECUTION
-if(!file.exists("data/opening_word_scores.csv")){
+if(run_calculation || !file.exists("data/opening_word_scores.csv")){
     scores <- calculate_scores(color_combos = color_combos,
                                remaining_words = words,
                                remaining_letters = abc,

@@ -62,7 +62,7 @@ END{
         freq_total += remaining_words[word]
     }
     for(guess in guesses){
-        printf("word: %s\ttime: %s\n", guess, strftime("%Y-%m-%d %H:%M:%S %Z", systime())) >> logfile
+        start_time = strftime("%Y-%m-%d %H:%M:%S %Z", systime())
         expected_information = 0
         for(combo_row = 1; combo_row <= NUM_COMBOS; ++combo_row){
             # <<BUILD REGULAR EXPRESSION>>
@@ -147,6 +147,8 @@ END{
         }
         # If you want to do further computation beyond the opening scores,
         # you'll want to save expected_information somewhere instead of just printing it out.
+        end_time = strftime("%Y-%m-%d %H:%M:%S %Z", systime())
+        printf("word: %s\tstart: %s\tend: %s\n", guess, start_time, end_time) >> logfile
         printf("%s\t%s\t%s\n", guess, expected_information, remaining_words[guess])
     }
 }

@@ -13,6 +13,7 @@ shiny::runGitHub(repo = "wordle-assistant",
                  username = "Ckrenzer",
                  ref = "main")
 ```
+Or on [shinyapps.io](https://7phynv-connor0krenzer.shinyapps.io/Wordle-Solver/).
 
 # Data
 Here are my data sources:

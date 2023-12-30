@@ -1,8 +1,11 @@
 # A simple UI for the solver
 library(shiny)
-library(shinycssloaders)
 library(shinyjs)
 source("r/play.R")
+is_running_on_server <- local({
+    shiny_port <- Sys.getenv("SHINY_PORT")
+    !(is.character(shiny_port) && shiny_port == "")
+})
 best_opening_guess <- names(scores[scores == max(scores)][1L])
 color_dropdown <- list("Green" = "green", "Yellow" = "yellow", "Grey" = "grey")
 color_inputs <- sprintf("color%d", 1L:5L)
@@ -15,6 +18,8 @@ insert_css_for_color_combo <- function(clr){
     enhanced[clr == "yellow"] <- "<span style='color:#FFB90F'>yellow</span>"
     enhanced
 }
+# can revisit if I ever use a more powerful server
+calculate_scores_fn <- `if`(is_running_on_server, calculate_scores_series, calculate_scores)
 
 ui <- fluidPage(
   useShinyjs(),
@@ -33,7 +38,7 @@ ui <- fluidPage(
   ),
   mainPanel(
     verbatimTextOutput(outputId = "next_best_guess"),
-    strong("Top 10 Choices:"), withSpinner(tableOutput("top_choices_table"), color = "#0dc5c1")
+    strong("Top 10 Choices:"), tableOutput("top_choices_table")
   )
 )
 
@@ -127,7 +132,8 @@ server <- function(input, output, session) {
                                remaining_words = remaining_words$data,
                                remaining_letters = remaining_letters$data,
                                color_combos = color_combos,
-                               colors = colors)
+                               colors = colors,
+                               calculate_scores_fn = calculate_scores_fn)
       remaining_letters$data <- updates$remaining_letters
       remaining_words$data   <- updates$remaining_words
       new_scores$data        <- updates$new_scores
@@ -187,5 +193,9 @@ server <- function(input, output, session) {
   shinyjs::hide("color5")
 }
 
-app <- shinyApp(ui = ui, server = server)
-runApp(app, launch.browser = TRUE)
+if(!is_running_on_server){
+    app <- shinyApp(ui = ui, server = server)
+    runApp(app, launch.browser = TRUE)
+} else {
+    shinyApp(ui = ui, server = server)
+}
