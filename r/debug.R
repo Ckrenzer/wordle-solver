@@ -2,9 +2,6 @@
 rm(list = ls())
 source("r/play.R")
 source("r/test.R")
-# 'updates' refer to the refresh of the inputs before going to the next guess.
-# (the update_scores call on guess #1 has no bearing on the first guess, only subsequent guesses)
-#
 # guess #1
 remaining_words <- words
 remaining_letters <- abc

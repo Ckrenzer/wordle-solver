@@ -12,3 +12,5 @@ time python3 py/play.py
 
 echo -e "\n\nJulia"
 time julia --optimize=3 jl/play.jl
+
+Rscript r/analyze_logs.R
