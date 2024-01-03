@@ -132,7 +132,8 @@ calculate_scores = function(remaining_words, remaining_letters, consolidate_logs
     numwords_per_process = Int(ceil(numwords / NUM_PROCESSES))
     start = 1
     for i in 1:NUM_PROCESSES
-        words_each_process_is_responsible_for[i] = words[start:(start + numwords_per_process - 1)]
+        word_elts = start:(start + numwords_per_process - 1)
+        words_each_process_is_responsible_for[i] = [words[word_elts], collect(word_elts)]
         start += numwords_per_process
         if(start + numwords_per_process > numwords)
             numwords_per_process = numwords - (start - 1)
@@ -140,14 +141,16 @@ calculate_scores = function(remaining_words, remaining_letters, consolidate_logs
     end
 
     # storing results in a dict
-    expected_information = Dict{String, Float64}()
+    expected_information = Vector{Float64}(undef, numwords)
     Threads.@threads for iter in 1:NUM_PROCESSES
-        guesses = words_each_process_is_responsible_for[iter]
+        iter_vals = words_each_process_is_responsible_for[iter]
+        guesses, inds = iter_vals
         logfile = generate_logfile_name(iter)
         open(logfile, "w") # create log
 
-        for guess in guesses
+        for elt in 1:length(guesses)
             guess_start_time = format_time()
+            guess = guesses[elt]
             remaining_words_by_combo = []
             for i in eachindex(COLOR_COMBOS)
                 filtered = [keys(guess_filter(guess, COLOR_COMBOS[i], remaining_words, deepcopy.(remaining_letters)))]
@@ -169,9 +172,15 @@ calculate_scores = function(remaining_words, remaining_letters, consolidate_logs
                                  0)
                 info += proportion_of_words_remaining_for_this_combo * entropy
             end
-            expected_information[guess] = info
+            expected_information[inds[elt]] = info
             print_log_info(logfile, guess, guess_start_time)
         end
+    end
+    # store results in dictionary
+    expected_information_dict = Dict{String, Float64}()
+    for i in 1:numwords
+        guess = words[i]
+        expected_information_dict[guess] = expected_information[i]
     end
 
     # consolidate logs
@@ -188,7 +197,7 @@ calculate_scores = function(remaining_words, remaining_letters, consolidate_logs
     end
     rm.(logfiles)
 
-    expected_information
+    expected_information_dict
 end
 
 # UNIT TESTS
