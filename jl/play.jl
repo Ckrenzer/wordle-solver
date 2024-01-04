@@ -128,10 +128,15 @@ calculate_scores = function(remaining_words, remaining_letters, consolidate_logs
     freq_total = sum(values(remaining_words))
     words = string.(keys(remaining_words))
     numwords = length(words)
-    words_each_process_is_responsible_for = Vector{Array}(undef, NUM_PROCESSES)
-    numwords_per_process = Int(ceil(numwords / NUM_PROCESSES))
+    if numwords < NUM_PROCESSES
+        numprocs = 1
+    else
+        numprocs = NUM_PROCESSES
+    end
+    words_each_process_is_responsible_for = Vector{Array}(undef, numprocs)
+    numwords_per_process = Int(ceil(numwords / numprocs))
     start = 1
-    for i in 1:NUM_PROCESSES
+    for i in 1:numprocs
         word_elts = start:(start + numwords_per_process - 1)
         words_each_process_is_responsible_for[i] = [words[word_elts], collect(word_elts)]
         start += numwords_per_process
@@ -140,28 +145,31 @@ calculate_scores = function(remaining_words, remaining_letters, consolidate_logs
         end
     end
 
-    # storing results in a dict
+    # compute scores
     expected_information = Vector{Float64}(undef, numwords)
-    Threads.@threads for iter in 1:NUM_PROCESSES
+    Threads.@threads for iter in 1:numprocs
         iter_vals = words_each_process_is_responsible_for[iter]
         guesses, inds = iter_vals
         logfile = generate_logfile_name(iter)
         open(logfile, "w") # create log
 
-        for elt in 1:length(guesses)
+        for elt in eachindex(guesses)
             guess_start_time = format_time()
             guess = guesses[elt]
-            remaining_words_by_combo = []
+            remaining_words_by_combo = Vector(undef, NUM_COMBOS)
             for i in eachindex(COLOR_COMBOS)
-                filtered = [keys(guess_filter(guess, COLOR_COMBOS[i], remaining_words, deepcopy.(remaining_letters)))]
-                if(length(filtered[1]) > 0)
-                    append!(remaining_words_by_combo, filtered)
+                filtered = keys(guess_filter(guess, COLOR_COMBOS[i], remaining_words, deepcopy(remaining_letters)))
+                if(length(filtered) > 0)
+                    remaining_words_by_combo[i] = filtered
+                else
+                    remaining_words_by_combo[i] = []
                 end
             end
+            remaining_words_by_combo = remaining_words_by_combo[length.(remaining_words_by_combo) .> 0]
 
             # calculate expected bits of information gained
             info = 0
-            for i in 1:length(remaining_words_by_combo)
+            for i in eachindex(remaining_words_by_combo)
                 combo_freq = 0
                 for remaining_word in remaining_words_by_combo[i]
                     combo_freq += sum(remaining_words[remaining_word])
@@ -178,14 +186,14 @@ calculate_scores = function(remaining_words, remaining_letters, consolidate_logs
     end
     # store results in dictionary
     expected_information_dict = Dict{String, Float64}()
-    for i in 1:numwords
+    for i in eachindex(words)
         guess = words[i]
         expected_information_dict[guess] = expected_information[i]
     end
 
     # consolidate logs
     outfile = generate_logfile_name("")
-    logfiles = generate_logfile_name.(1:NUM_PROCESSES)
+    logfiles = generate_logfile_name.(1:numprocs)
     if(consolidate_logsp)
         open(outfile, "w") do outfile
             for logfile in logfiles
@@ -234,3 +242,26 @@ open(scores_file, "w") do scores_file
         write(scores_file, line)
     end
 end
+
+
+
+x = deepcopy(remaining_words_by_combo)
+for i in eachindex(x)
+    x[i] = []
+end
+
+x = deepcopy.(ABC)
+x[1] = ["a", "b"]
+
+y = deepcopy(ABC)
+y[1] = ["a", "b"]
+
+using Profile
+using ProfileView
+Profile.init(delay=0.01)
+sampledict = Dict(collect(pairs(WORDS))[1:250])
+@profile calculate_scores(sampledict, ABC, false)
+
+Profile.print(format=:flat)
+
+ProfileView.view()
