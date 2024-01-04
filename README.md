@@ -6,7 +6,7 @@ You can see the solver by pasting the following code into your R console:
 
 ```
 installed_packages <- rownames(installed.packages())
-to_install <- c("doParallel", "shiny", "shinycssloaders", "shinyjs")
+to_install <- c("doParallel", "shiny", "shinyjs")
 to_install <- to_install[!to_install %in% installed_packages]
 for(pkg in to_install) install.packages(pkg)
 shiny::runGitHub(repo = "wordle-assistant",
