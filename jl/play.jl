@@ -115,8 +115,10 @@ guess_filter = function(guess, combo, remaining_words, remaining_letters)
         return subset
     end
     for word in keys(remaining_words)
-        if contains(word, rgx) & all(occursin.(yellow_letters, word))
-            subset[word] = remaining_words[word]
+        if contains(word, rgx)
+            if all(occursin.(yellow_letters, word))
+                subset[word] = remaining_words[word]
+            end
         end
     end
     subset
@@ -152,13 +154,12 @@ calculate_scores = function(remaining_words, remaining_letters, consolidate_logs
         guesses, inds = iter_vals
         logfile = generate_logfile_name(iter)
         open(logfile, "w") # create log
-
         for elt in eachindex(guesses)
             guess_start_time = format_time()
             guess = guesses[elt]
             remaining_words_by_combo = Vector(undef, NUM_COMBOS)
             for i in eachindex(COLOR_COMBOS)
-                filtered = keys(guess_filter(guess, COLOR_COMBOS[i], remaining_words, deepcopy(remaining_letters)))
+                filtered = keys(guess_filter(guess, COLOR_COMBOS[i], remaining_words, deepcopy.(remaining_letters)))
                 if(length(filtered) > 0)
                     remaining_words_by_combo[i] = filtered
                 else
@@ -242,26 +243,3 @@ open(scores_file, "w") do scores_file
         write(scores_file, line)
     end
 end
-
-
-
-x = deepcopy(remaining_words_by_combo)
-for i in eachindex(x)
-    x[i] = []
-end
-
-x = deepcopy.(ABC)
-x[1] = ["a", "b"]
-
-y = deepcopy(ABC)
-y[1] = ["a", "b"]
-
-using Profile
-using ProfileView
-Profile.init(delay=0.01)
-sampledict = Dict(collect(pairs(WORDS))[1:250])
-@profile calculate_scores(sampledict, ABC, false)
-
-Profile.print(format=:flat)
-
-ProfileView.view()
