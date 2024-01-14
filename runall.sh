@@ -4,8 +4,11 @@
 echo "R"
 time Rscript r/play.R TRUE
 
-echo -e "\n\nAWK"
-time source awk/batch.sh
+echo -e "\n\nGAWK"
+time source awk/batch.sh "gawk"
+
+echo -e "\n\nMAWK"
+time source awk/batch.sh "mawk"
 
 echo -e "\n\nPython"
 time python3 py/play.py

@@ -2,7 +2,7 @@ library(ggplot2)
 library(knitr)
 
 {
-    plot_colors <- c("jl" = "purple", "r" = "blue", "awk" = "red", "py" = "green")
+    plot_colors <- c("jl" = "purple", "r" = "blue", "gawk" = "red", "mawk" = "orange", "py" = "green")
     logfiles <- list.files(path = "log", full.names = TRUE)
     language <- local({
         basenames <- basename(logfiles)
@@ -55,9 +55,9 @@ library(knitr)
 {
     time_by_language <- ggplot(by_lang) +
         geom_col(aes(x = reorder(language, -compute_time), y = compute_time, fill = language)) +
-        ggtitle("time needed to calculate opening word score") +
+        ggtitle("average number of seconds needed to calculate opening word score") +
         xlab("language") +
-        ylab("mean word compute time (seconds)") +
+        ylab("mean compute time (seconds)") +
         scale_fill_manual(values = plot_colors) +
         theme_minimal()
     time_by_word <- ggplot(logs) +
@@ -68,9 +68,9 @@ library(knitr)
                        show.legend = FALSE) +
         scale_x_continuous(breaks = min(logs[["compute_time"]]):max(logs[["compute_time"]])) +
         facet_wrap(~language, nrow = 4L) +
-        ggtitle("time needed to compute the opening score of a word") +
+        ggtitle("computation time distribution") +
         xlab("seconds needed to compute opening score (rounded to the nearest second)") +
-        ylab("number of words") +
+        ylab("number of words in bucket") +
         theme_minimal()
     superlatives <- group_by(logs, function(x){
                                  sorted <- x[order(x$compute_time), ]
