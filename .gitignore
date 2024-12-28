@@ -37,6 +37,8 @@ statprof/
 # awk partition files
 data/word_list_partition_a*
 
+*.fasl
+
 # shinyapps.io files
 rsconnect/
 deploy.R

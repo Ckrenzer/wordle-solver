@@ -2,7 +2,7 @@ library(ggplot2)
 library(knitr)
 
 {
-    plot_colors <- c("jl" = "purple", "r" = "blue", "gawk" = "red", "mawk" = "orange", "py" = "green")
+    plot_colors <- c("lisp" = "green", "jl" = "purple", "r" = "blue", "gawk" = "red", "mawk" = "orange", "py" = "yellow")
     logfiles <- list.files(path = "log", full.names = TRUE)
     language <- local({
         basenames <- basename(logfiles)
