@@ -10,7 +10,7 @@ from datetime import datetime
 
 # IMPORTANT 'CONSTANTS'
 LOGFILE = "log/progress_py.txt"
-NUM_PROCESSES = os.cpu_count()
+NUM_PROCESSES = int(os.getenv("NUM_PROCESSES")) # os.cpu_count()
 NUM_CHARACTERS = 5
 ABC = [list(string.ascii_lowercase) for i in range(NUM_CHARACTERS)]
 COLORS = {"green": 0, "yellow": 1, "grey": 2}

@@ -1,7 +1,7 @@
 awk_implementation="$1"
 
 # create files for the words that each process will be responsible for running
-numprocesses=$(nproc)
+numprocesses=$NUM_PROCESSES # $(nproc)
 wc data/wordle_list.txt -l | awk -v numprocesses="$numprocesses" '{
     numlines_per_file = $1 / numprocesses
     if(numlines_per_file != int(numlines_per_file)){ # take the ceiling

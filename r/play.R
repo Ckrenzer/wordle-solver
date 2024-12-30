@@ -139,7 +139,7 @@ guess_filter <- function(guess, combo, remaining_words, remaining_letters, color
 # each guess after checking it against each color combination.
 calculate_scores <- function(color_combos, remaining_words, remaining_letters, colors, split_words, logfile){
     freq_total <- sum(remaining_words)
-    cores <- parallel::detectCores()
+    cores <- as.integer(Sys.getenv("NUM_PROCESSES")) # parallel::detectCores()
     cl <- parallel::makeCluster(cores)
     doParallel::registerDoParallel(cl)
     on.exit(parallel::stopCluster(cl), add = TRUE)

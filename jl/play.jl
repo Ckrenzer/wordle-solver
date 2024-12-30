@@ -4,7 +4,7 @@ using Dates # only used for logging
 # IMPORTANT 'CONSTANTS'
 const UTC_TO_LOCAL_DIFF = -(60 * 60 * 5)
 const TZ = "EST"
-const NUM_PROCESSES = Threads.nthreads()
+const NUM_PROCESSES = parse(Int, ENV["NUM_PROCESSES"]) # Threads.nthreads()
 const NUM_CHARACTERS = 5
 const COLORS = Dict(:green => 0, :yellow => 1, :grey => 2)
 const LETTERS = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]

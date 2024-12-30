@@ -1,5 +1,6 @@
 (ql:quickload "cl-ppcre")
 (ql:quickload "local-time")
+(ql:quickload "uiop")
 ;; bordeaux-threads does not guarantee threads will run on different cores--that
 ;; decision is left to the os and task scheduler.
 (ql:quickload "bordeaux-threads")
@@ -80,7 +81,7 @@
 
 
 ; GLOBAL VARIABLES
-(defparameter *num-cores* 8
+(defparameter *num-cores* (parse-integer (or (uiop:getenv "NUM_PROCESSES") "8"))
   "Number of CPU cores on machine (used for the number of threads to spawn).")
 
 (defparameter *log-file-date-stamp-format*
