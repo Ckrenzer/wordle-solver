@@ -3,7 +3,7 @@ library(knitr)
 
 {
     plot_colors <- c("lisp" = "green", "jl" = "purple", "r" = "blue", "gawk" = "red", "mawk" = "orange", "py" = "yellow")
-    logfiles <- list.files(path = "log", full.names = TRUE)
+    logfiles <- list.files(path = "log", pattern = "progress_", full.names = TRUE)
     language <- local({
         basenames <- basename(logfiles)
         matchind_start <- regexpr(pattern = "(?<=progress_)[a-z0-9]+(?=\\.)", text = basenames, perl = TRUE)
