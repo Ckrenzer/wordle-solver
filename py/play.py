@@ -97,7 +97,7 @@ def guess_filter(guess, combo, remaining_words, remaining_letters):
 def calculate_scores_(iterable, information):
     guesses, remaining_words, remaining_letters, freq_total = iterable
     for guess in guesses:
-        start_time = datetime.now().astimezone().strftime("%Y-%m-%d %H:%M:%S %Z")
+        start_time = datetime.now().timestamp()
         remaining_words_by_combo = []
         for i in range(len(COLOR_COMBOS)):
             filtered = guess_filter(guess,
@@ -116,7 +116,7 @@ def calculate_scores_(iterable, information):
                 entropy = math.log2(1.0 / proportion_of_words_remaining_for_this_combo)
             expected_information += proportion_of_words_remaining_for_this_combo * entropy
         information[guess] = expected_information
-        end_time = datetime.now().astimezone().strftime("%Y-%m-%d %H:%M:%S %Z")
+        end_time = datetime.now().timestamp()
         with open(LOGFILE, "a") as file:
             print(f"word: {guess}\tstart: {start_time}\tend: {end_time}\n", end="", file=file)
 

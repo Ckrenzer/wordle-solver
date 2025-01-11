@@ -1,5 +1,5 @@
 using Base.Threads
-using Dates # only used for logging
+using Printf
 
 # IMPORTANT 'CONSTANTS'
 const UTC_TO_LOCAL_DIFF = -(60 * 60 * 5)
@@ -57,12 +57,11 @@ end
 generate_logfile_name = function(id)
     "log/progress_jl" * string(id) * ".txt"
 end
-format_time = function()
-    formatted_datetime = Dates.unix2datetime(time() + UTC_TO_LOCAL_DIFF)
-    Dates.format(formatted_datetime, "yyyy-mm-dd HH:MM:SS") * " " * TZ
+get_unix_time = function()
+    @sprintf "%.6f" time()
 end
 print_log_info = function(path_logfile, guess, starttime)
-    info = "word: " * guess * "\tstart: " * starttime * "\tend: " * format_time()
+    info = "word: " * guess * "\tstart: " * starttime * "\tend: " * get_unix_time()
     open(path_logfile, "a+") do logfile
         println(logfile, info)
     end
@@ -147,13 +146,16 @@ calculate_scores = function(remaining_words, remaining_letters, consolidate_logs
     end
 
     # compute scores
-    expected_information = Dict{String, Float64}()
+    #
+    # preallocate keys in dictionary for thread safety
+    # (a bit hacky, but I think this works).
+    expected_information = Dict{String, Float64}(word => 0.0 for word in words)
     Threads.@threads for iter in 1:numprocs
         guesses = words_each_process_is_responsible_for[iter]
         logfile = generate_logfile_name(iter)
         open(logfile, "w") # create log
         for guess in guesses
-            guess_start_time = format_time()
+            guess_start_time = get_unix_time()
             remaining_words_by_combo = Vector(undef, NUM_COMBOS)
             for i in eachindex(COLOR_COMBOS)
                 filtered = keys(guess_filter(guess, COLOR_COMBOS[i], remaining_words, deepcopy.(remaining_letters)))

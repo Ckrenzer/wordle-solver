@@ -1,4 +1,4 @@
-awk_implementation="$1"
+awk_implementation="$1" # only gawk is supported due to play.awk's use of gawk's time library
 
 # create files for the words that each process will be responsible for running
 numprocesses=$NUM_PROCESSES # $(nproc)

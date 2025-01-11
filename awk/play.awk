@@ -1,5 +1,7 @@
-#!/usr/bin/awk -f
+#!/usr/bin/gawk -f
 
+# this implementation can only use gawk due to the presence of the time library
+@load "time"
 BEGIN{
     # AWK SETTINGS
     FS = ","
@@ -62,7 +64,7 @@ END{
         freq_total += remaining_words[word]
     }
     for(guess in guesses){
-        start_time = strftime("%Y-%m-%d %H:%M:%S %Z", systime())
+        start_time = gettimeofday()
         expected_information = 0
         for(combo_row = 1; combo_row <= NUM_COMBOS; ++combo_row){
             # <<BUILD REGULAR EXPRESSION>>
@@ -147,8 +149,8 @@ END{
         }
         # If you want to do further computation beyond the opening scores,
         # you'll want to save expected_information somewhere instead of just printing it out.
-        end_time = strftime("%Y-%m-%d %H:%M:%S %Z", systime())
-        printf("word: %s\tstart: %s\tend: %s\n", guess, start_time, end_time) >> logfile
+        end_time = gettimeofday()
+        printf("word: %s\tstart: %.6f\tend: %.6f\n", guess, start_time, end_time) >> logfile
         printf("%s\t%s\t%s\n", guess, expected_information, remaining_words[guess])
     }
 }

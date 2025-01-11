@@ -70,8 +70,7 @@ str_subset <- function(str, patt, fixed = FALSE){
     str[.Internal(grepl(patt, str, FALSE, FALSE, FALSE, fixed, FALSE, FALSE))]
 }
 print_log_info <- function(guess, start_time, logfile = ""){
-    end_time <- strftime(Sys.time(), "%Y-%m-%d %H:%M:%S %Z")
-    msg <- sprintf("word: %s\tstart: %s\tend: %s\n", guess, start_time, end_time)
+    msg <- sprintf("word: %s\tstart: %.6f\tend: %.6f\n", guess, start_time, Sys.time())
     cat(msg, file = logfile, append = TRUE)
 }
 # fast and dangerous duplicated.default, useful because it will be called many times on small vectors
@@ -158,7 +157,7 @@ calculate_scores <- function(color_combos, remaining_words, remaining_letters, c
                      .combine = c,
                      .final = function(x) setNames(x, names(remaining_words))
                      ) %dopar% {
-        start_time <- strftime(Sys.time(), "%Y-%m-%d %H:%M:%S %Z")
+        start_time <- Sys.time()
         # filter out impossible color combos--a grey letter cannot also be green or yellow
         split_guess <- split_words[[guess]]
         repeating_letters <- uniq(split_guess[duplicated(split_guess)])
@@ -196,7 +195,7 @@ calculate_scores_series <- function(color_combos, remaining_words, remaining_let
     num_words  <- length(remaining_words)
     expected_information <- structure(double(num_words), names = names(remaining_words))
     for(guess in names(remaining_words)){
-        start_time <- strftime(Sys.time(), "%Y-%m-%d %H:%M:%S %Z")
+        start_time <- Sys.time()
         # filter out impossible color combos--a grey letter cannot also be green or yellow
         split_guess <- split_words[[guess]]
         repeating_letters <- uniq(split_guess[duplicated(split_guess)])

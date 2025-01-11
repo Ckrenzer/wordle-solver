@@ -1,4 +1,6 @@
 (ql:quickload "cl-ppcre")
+;; local-time is no longer needed, but we can keep it around should we want to
+;; write formatted dates instead of unix time in our logs.
 (ql:quickload "local-time")
 (ql:quickload "uiop")
 ;; bordeaux-threads does not guarantee threads will run on different cores--that
@@ -75,8 +77,16 @@
       (/ integer-part scale-factor))))
 
 (defun get-formatted-time ()
-  "Get the current time using *LOG-FILE-DATE-STAMP-FORMAT*'s format."
+  "This function is not used and has since been replaced by a call to a modified get-time-of-day.
+  Get the current time using *LOG-FILE-DATE-STAMP-FORMAT*'s format."
   (local-time:format-timestring nil (local-time:now) :format *log-file-date-stamp-format*))
+
+(defun get-time-of-day-scalar ()
+  "Returns current unix time as a floating-point number."
+  (multiple-value-bind
+      (sec microsec)
+      (get-time-of-day)
+    (+ (coerce sec 'double-float) (/ microsec 1000000.0))))
 
 
 
@@ -254,7 +264,7 @@
           :if-exists :supersede)
       (dolist (guess guesses)
         (let (
-              (start-time (get-formatted-time))
+              (start-time (get-time-of-day-scalar))
               end-time
               remaining-words-by-combo
               (expected-information 0.0)
@@ -274,9 +284,9 @@
                 (setf entropy (log (/ 1.0 proportion-of-words-remaining-for-this-combo) 2)))
               (incf expected-information (* proportion-of-words-remaining-for-this-combo entropy))))
           (setf (gethash guess information) expected-information)
-          (setf end-time (get-formatted-time)) ;; log the guess' compute time
+          (setf end-time (get-time-of-day-scalar)) ;; log the guess' compute time
             (format thread-out-stream
-                    "word: ~a~astart: ~a~aend: ~a~%"
+                    "word: ~a~astart: ~6$~aend: ~6$~%"
                     guess #\tab start-time #\tab end-time))))
     information))
 
