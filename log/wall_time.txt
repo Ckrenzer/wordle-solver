@@ -1,0 +1,65 @@
+R
+Loading required package: foreach
+Loading required package: iterators
+Loading required package: parallel
+
+real	60m54.199s
+user	240m37.403s
+sys	0m12.040s
+
+
+GAWK
+gawk: awk/play.awk:5: warning: The time extension is obsolete. Use the timex extension from gawkextlib instead.
+gawk: awk/play.awk:5: warning: The time extension is obsolete. Use the timex extension from gawkextlib instead.
+gawk: awk/play.awk:5: warning: The time extension is obsolete. Use the timex extension from gawkextlib instead.
+gawk: awk/play.awk:5: warning: The time extension is obsolete. Use the timex extension from gawkextlib instead.
+
+real	49m42.868s
+user	190m58.587s
+sys	0m13.429s
+
+
+Python
+
+real	32m56.691s
+user	126m47.166s
+sys	0m6.257s
+
+
+Julia
+
+real	17m55.719s
+user	66m12.594s
+sys	1m44.259s
+
+
+SBCL
+
+; file: /app/lisp/play.lisp
+; in: DEFUN FAST-INTERSECTION
+;     (SUBSEQ ITEM 0 *NUM-CHARACTERS*)
+; 
+; caught WARNING:
+;   undefined variable: COMMON-LISP-USER::*NUM-CHARACTERS*
+; 
+; compilation unit finished
+;   Undefined variable:
+;     *NUM-CHARACTERS*
+;   caught 1 WARNING condition
+
+; file: /app/lisp/play.lisp
+; in: DEFUN GET-FORMATTED-TIME
+;     (LOCAL-TIME:FORMAT-TIMESTRING NIL (LOCAL-TIME:NOW) :FORMAT
+;                                   *LOG-FILE-DATE-STAMP-FORMAT*)
+; 
+; caught WARNING:
+;   undefined variable: COMMON-LISP-USER::*LOG-FILE-DATE-STAMP-FORMAT*
+; 
+; compilation unit finished
+;   Undefined variable:
+;     *LOG-FILE-DATE-STAMP-FORMAT*
+;   caught 1 WARNING condition
+
+real	24m39.072s
+user	94m45.511s
+sys	0m30.486s

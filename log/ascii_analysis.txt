@@ -1,0 +1,84 @@
+mean word compute time (seconds)
+| compute_time|language |
+|------------:|:--------|
+|    1.1249191|r        |
+|    0.8943628|gawk     |
+|    0.5924562|py       |
+|    0.4517459|lisp     |
+|    0.3276969|jl       |
+
+mean word compute time by number of distinct letters in word (seconds)
+|language |         2|         3|         4|         5|
+|:--------|---------:|---------:|---------:|---------:|
+|r        | 0.2341047| 0.4084544| 0.7447830| 1.3563052|
+|gawk     | 0.1983720| 0.3407820| 0.6004018| 1.0732770|
+|py       | 0.1362345| 0.2293926| 0.3995966| 0.7098294|
+|lisp     | 0.0966958| 0.1673047| 0.3003411| 0.5438547|
+|jl       | 0.0826174| 0.1338210| 0.2250397| 0.3902099|
+
+Least expensive and most expensive words by language
+|word  |language |compute_time   |
+|:-----|:--------|:--------------|
+|mamma |gawk     |0.1893821 secs |
+|cocco |gawk     |0.1909342 secs |
+|anana |gawk     |0.1918919 secs |
+|peepe |gawk     |0.1919909 secs |
+|ayaya |gawk     |0.1946301 secs |
+|flour |gawk     |1.1777570 secs |
+|snack |gawk     |1.1815341 secs |
+|waulk |gawk     |1.1822710 secs |
+|runch |gawk     |1.1842029 secs |
+|calmy |gawk     |1.1904142 secs |
+
+|word  |language |compute_time   |
+|:-----|:--------|:--------------|
+|anana |jl       |0.0770290 secs |
+|esses |jl       |0.0786619 secs |
+|taata |jl       |0.0795810 secs |
+|susus |jl       |0.0804920 secs |
+|mamma |jl       |0.0805831 secs |
+|sizel |jl       |0.4889209 secs |
+|apeek |jl       |0.7764790 secs |
+|wasps |jl       |0.7768500 secs |
+|uteri |jl       |0.8175108 secs |
+|mauri |jl       |0.8220398 secs |
+
+|word  |language |compute_time   |
+|:-----|:--------|:--------------|
+|susus |lisp     |0.0917089 secs |
+|nanna |lisp     |0.0920930 secs |
+|cocco |lisp     |0.0938349 secs |
+|mamma |lisp     |0.0952060 secs |
+|esses |lisp     |0.0952120 secs |
+|wingy |lisp     |0.5889709 secs |
+|dizen |lisp     |0.5923870 secs |
+|frowy |lisp     |0.5937059 secs |
+|drank |lisp     |0.5941670 secs |
+|fiber |lisp     |0.5975909 secs |
+
+|word  |language |compute_time   |
+|:-----|:--------|:--------------|
+|ayaya |py       |0.1270030 secs |
+|susus |py       |0.1330290 secs |
+|anana |py       |0.1336248 secs |
+|cocco |py       |0.1337762 secs |
+|mamma |py       |0.1361291 secs |
+|aloft |py       |0.7668011 secs |
+|anigh |py       |0.7702720 secs |
+|sakti |py       |0.7770050 secs |
+|wagyu |py       |0.7792249 secs |
+|toing |py       |0.8089411 secs |
+
+|word  |language |compute_time   |
+|:-----|:--------|:--------------|
+|mamma |r        |0.2173748 secs |
+|anana |r        |0.2184751 secs |
+|nanna |r        |0.2196131 secs |
+|ayaya |r        |0.2217309 secs |
+|peepe |r        |0.2369871 secs |
+|crise |r        |1.7151380 secs |
+|crits |r        |1.7255969 secs |
+|croak |r        |1.8214781 secs |
+|cripe |r        |1.8247180 secs |
+|crips |r        |1.9258380 secs |
+
