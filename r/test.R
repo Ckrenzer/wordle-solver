@@ -33,7 +33,8 @@ stopifnot(
                                  remaining_words = words[1L:5L],
                                  remaining_letters = abc,
                                  colors = colors,
-                                 split_words = split_words[1L:5L]), 1) == c(1.6, 1.6, 1.6, 1.6, 1),
+                                 split_words = split_words[1L:5L],
+                                 logfile = tempfile()), 1) == c(1.6, 1.6, 1.6, 1.6, 1),
           round(calculate_scores_series(color_combos = color_combos,
                                         remaining_words = words[1L:5L],
                                         remaining_letters = abc,
@@ -46,12 +47,14 @@ stopifnot(
                               remaining_words = words,
                               remaining_letters = abc,
                               color_combos = color_combos,
-                              colors = colors)$new_scores, 2) == c(0.75, 0.75),
+                              colors = colors,
+                              calculate_scores_fn = calculate_scores)$new_scores, 2) == c(0.75, 0.75),
           names(update_scores(guess = "ocean",
                               split_words = split_words,
                               combo = colors[c("yellow", "green", "grey", "grey", "green")],
                               remaining_words = words,
                               remaining_letters = abc,
                               color_combos = color_combos,
-                              colors = colors)$new_scores) == c("scion", "scorn")
+                              colors = colors,
+                              calculate_scores_fn = calculate_scores_series)$new_scores) == c("scion", "scorn")
 )

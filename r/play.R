@@ -33,6 +33,7 @@
 
 # PACKAGES
 library(doParallel)
+library(data.table)
 
 # COMMAND LINE ARGUMENTS
 run_calculation <- length(commandArgs(trailingOnly = TRUE)) > 0L # not very sophisticated
@@ -47,6 +48,16 @@ color_combos <- list(colors) |>
     as.matrix() |>
     unname()
 # official acceptable answer list and unigram frequencies (frequencies as provided by google...i think it was google)
+word_table <- local({
+    words <- data.table::fread("data/wordle_list.txt", header = FALSE)
+    setnames(words, "word")
+    unigrams <- data.table::fread("data/unigram_freq.csv")
+    words <- merge(words, unigrams, by = "word", all.x = TRUE)
+    words[, count := as.integer(count)]
+    setnafill(words, type = "const", fill = 0L, cols = "count")
+    data.table::setkey(words, "word")
+    words
+})
 words <- local({
     words <- setNames(read.csv("data/wordle_list.txt", header = FALSE), "word")
     unigrams <- read.csv("data/unigram_freq.csv")
@@ -56,6 +67,7 @@ words <- local({
     structure(counts, names = combined$word)
 })
 split_words <- structure(strsplit(names(words), "", fixed = TRUE), names = names(words))
+letter_encoding <- setNames(as.integer(2^(seq_along(letters) - 1L)), letters)
 
 # HELPER FUNCTIONS
 # fast and dangerous way of computing x[!x %in% y]
@@ -84,6 +96,35 @@ uniq <- function(x){
 # fast and dangerous rowSums--i don't need to concern myself with all this silly error-checking
 rowSums <- function (x, na.rm = FALSE, dims = 1L){
     .Internal(rowSums(x, nrow(x), ncol(x), FALSE))
+}
+# generate numeric ID for each element in a list of character vectors where
+# each character vector only includes lowercase letters in the latin alphabet
+# and does not have any duplicates
+base2_encode_letters <- function(letter_list, lookup){
+    vapply(letter_list,
+           function(letter_vec) sum(lookup[letter_vec]),
+           integer(1L))
+}
+# used to decode the numeric ID representing the remaining letters
+base2_decomposition <- function(numbers){
+    decomp <- function(n) {
+        powers_of_2 <- integer(0L)
+        power <- 1L
+        while (n > 0L) {
+            if (n %% 2L == 1L) {
+                powers_of_2 <- c(powers_of_2, power)
+            }
+            n <- n %/% 2L
+            power <- power * 2L
+        }
+        powers_of_2
+    }
+    lapply(numbers, decomp)
+}
+# you can regenerate the letters represented by the numeric ID after
+# it has been decomposed by looking up each letter's corresponding value
+base2_decode_letters <- function(inputs, lookup = letter_encoding){
+    Map(function(input) names(lookup[lookup %in% input]), base2_decomposition(input))
 }
 
 # 'BUSINESS LOGIC' FUNCTIONS
@@ -115,13 +156,13 @@ build_regex <- function(guess, combo, remaining_letters, colors){
 }
 # take the user's guess and filter down to the remaining
 # possible words based on the input and color combo for that input.
-guess_filter <- function(guess, combo, remaining_words, remaining_letters, colors){
+guess_filter <- function(guess, combo, remaining_words, remaining_letters, colors, num_characters_in_guess){
     tryCatch({
         rgx_info <- build_regex(guess = guess, combo = combo, remaining_letters = remaining_letters, colors = colors)
         remaining_letters <- rgx_info[["remaining_letters"]]
         rgx               <- rgx_info[["rgx"]]
         is_yellow         <- rgx_info[["is_yellow"]]
-        remaining_words <- str_subset(names(remaining_words), rgx)
+        remaining_words <- str_subset(remaining_words, rgx)
         # Ensure results contain all of the yellow letters when yellow was in the combo
         for(yellow_letter in guess[is_yellow]){
             remaining_words <- str_subset(remaining_words, yellow_letter, fixed = TRUE)
@@ -129,10 +170,9 @@ guess_filter <- function(guess, combo, remaining_words, remaining_letters, color
         list(remaining_letters = remaining_letters, remaining_words = remaining_words)
     },
     error = function(cnd){
-        list(remaining_letters = character(0L),
-             remaining_words = structure(integer(0L), names = character(0L))
-    )}
-    )
+        list(remaining_letters = lapply(seq_len(num_characters_in_guess), function(i) character(0L)),
+             remaining_words = character(0L))
+    })
 }
 # calculate the bits of information gained for
 # each guess after checking it against each color combination.

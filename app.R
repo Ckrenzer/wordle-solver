@@ -2,6 +2,7 @@
 library(shiny)
 library(shinyjs)
 source("r/play.R")
+options(browser = "brave")
 is_running_on_server <- local({
     shiny_port <- Sys.getenv("SHINY_PORT")
     !(is.character(shiny_port) && shiny_port == "")
