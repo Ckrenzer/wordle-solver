@@ -1,11 +1,12 @@
 #!/usr/bin/Rscript
-# references to 'powers of 2' refer to encoding sets of letters or words into
-# arbitrarily-large integers using sums of powers of 2 inspired by unix file
-# permissions. this is done to represent sets of letters or words as scalars
-# rather than needing to build out large tables that store every combination
-# in the game. this cuts down on disk space, database query execution time,
-# and the number of tables needed in the database (simplification!). sums
-# of powers of 2 can be decomposed in exactly one way.
+# references to 'powers of 2' are regarding the encoding of sets of letters or
+# words into arbitrarily-large integers using sums of powers of 2 inspired by
+# unix file permissions. this is done to represent sets of letters or words as
+# scalars rather than needing to build out large tables that store every
+# combination in the game. this cuts down on disk space, database query
+# execution time, and the number of tables needed in the database
+# (simplification!).
+# sums of powers of 2 can be decomposed in exactly one way.
 #
 # Ex. 15 can be decomposed into the following powers of 2:
 #         8  +  4  +  2  +  1  = 15
@@ -19,14 +20,18 @@ library(parallelly)
 library(doParallel)
 library(foreach)
 library(DBI)
-library(RSQLite)
+library(RPostgreSQL)
 library(gmp)
 
 
 # CONSTRUCT DATABASE
-db_file <- "db/wordle.sqlite3"
 tryCatch({
-    dbconn <- DBI::dbConnect(RSQLite::SQLite(), db_file)
+    dbconn <- DBI::dbConnect(RPostgreSQL::PostgreSQL(),
+                             host = Sys.getenv("dbhost"),
+                             port = Sys.getenv("dbport"),
+                             dbname = Sys.getenv("dbname"),
+                             user = Sys.getenv("dbuser"),
+                             password = Sys.getenv("dbpass"))
     DBI::dbExecute(dbconn, "
         -- integer-to-color mapping.
         CREATE TABLE IF NOT EXISTS colors (
@@ -41,12 +46,20 @@ tryCatch({
         );
     ")
     DBI::dbExecute(dbconn, "
+        -- houses combo_id for each color combo.
+        CREATE TABLE IF NOT EXISTS combo_ids (
+            combo_id INTEGER,
+            PRIMARY KEY (combo_id)
+       );
+   ")
+    DBI::dbExecute(dbconn, "
         -- stores all (num_colors)^(num_characters_in_guess) color combos.
         CREATE TABLE IF NOT EXISTS color_combos (
             combo_id INTEGER,
             letter_position INTEGER,
             representation INTEGER,
             PRIMARY KEY (combo_id, letter_position),
+            FOREIGN KEY (combo_id) REFERENCES combo_ids(combo_id),
             FOREIGN KEY (representation) REFERENCES colors(representation)
         );
     ")
@@ -57,81 +70,45 @@ tryCatch({
             word TEXT,
             frequency INTEGER,
             -- formalizes the values used to represent a given word in a set.
-            -- storing as text because these values are arbitrarily-large.
-            -- disk space is not a concern since this table is relatively
-            -- small.
-            power_of_2 TEXT,
+            power_of_2 NUMERIC,
             PRIMARY KEY (word),
-            -- the power of 2 must tie to exactly one word. using smaller
-            -- numbers is much more managable than arbitrarily-large powers of
-            -- 2, so you may wish to revise this constraint to make it unique
-            -- within a word length rather than globally unique.
+            -- the power of 2 must tie to exactly one word.
             UNIQUE (power_of_2)
         );
     ")
     DBI::dbExecute(dbconn, "
-        -- determines whether a color combo is possible for the given word
-        -- Ex. the colors for 'll' in 'pulls' cannot be yellow and grey, respectively;
-        --     that constitutes an invalid color combo.
-        CREATE TABLE IF NOT EXISTS combo_validity (
-            guess TEXT,
-            combo_id INTEGER,
-            combo_is_possible INTEGER,
-            PRIMARY KEY (guess, combo_id),
-            FOREIGN KEY (guess) REFERENCES unigram_frequency(word),
-            FOREIGN KEY (combo_id) REFERENCES color_combos(combo_id)
-        );
-    ")
-    DBI::dbExecute(dbconn, "
-        -- formalizes the encoding used to produce remaining_letters' letter_set_id
-        -- column. the power_of_2 value zero (which makes this column a bit of a
-        -- misnomer since zero isn't a power of 2) denotes the empty set of letters.
+        -- formalizes the encoding used to produce the letter_set_id column.
+        -- the absence of a value in this table denotes the empty set of letters.
         CREATE TABLE IF NOT EXISTS letter_values (
             letter_position INTEGER,
             letter TEXT,
-            -- formalizes the values used to represent a given letter and
-            -- position in a set.
-            -- storing as text because these values are arbitrarily-large.
-            -- disk space is not a concern since this table is relatively
-            -- small.
-            power_of_2 TEXT,
+            power_of_2 NUMERIC,
             PRIMARY KEY (letter_position, letter, power_of_2),
-            -- the power of 2 must tie to exactly one letter-position combo.
-            -- using smaller numbers is much more managable than
+            -- power_of_2 must tie to exactly one letter_position-letter combo.
             UNIQUE(power_of_2)
         );
     ")
     DBI::dbExecute(dbconn, "
-        -- this table stores combinations of guess, color combo, and guess
-        -- numbers to represent a node along a tree of guesses.
-        CREATE TABLE IF NOT EXISTS outcome_ids (
-            current_guess_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            previous_guess_id INTEGER,
-            current_guess_num INTEGER,
-            current_guess TEXT,
-            current_combo_id INTEGER,
-            -- these could be stored as text (SQLite does not support
-            -- arbitrarily-large integers), but I'm being a cheapo because I
-            -- found that raw bytes consume 1/3 the disk space as an equivalent
-            -- string.
-            -- stores the whole numbers as binary data in little-endian format.
-            -- processing and decoding is pretty quick.
-            --
-            -- a major shortcoming of storing raw bytes instead of using integers
-            -- is that it becomes prohibitively difficult to add a constraint
-            -- checking that the value is a whole number that can be decomposed
-            -- by the powers of 2 in the corresponding lookup tables. A different
-            -- database would be needed to implement such logic (duckdb and its
-            -- VARINT is a likely contender).
-            remaining_words_set_id BLOB,
-            remaining_letters_set_id BLOB,
-            FOREIGN KEY (previous_guess_id) REFERENCES outcome_ids(current_guess_id),
-            FOREIGN KEY (current_guess, current_combo_id) REFERENCES combo_validity(guess, combo_id),
-            CONSTRAINT node_info_within_tree_is_unique UNIQUE (previous_guess_id,
-                                                               current_guess_num,
-                                                               current_guess,
-                                                               current_combo_id)
-            );
+        -- determines whether a color combo is possible for the given word
+        -- Ex. the colors for 'll' in 'pulls' cannot be yellow and grey,
+        --     respectively; that constitutes an invalid color combo.
+        -- and stores an integer representation of remaining words and letters
+        -- for that color combo and given word.
+        --
+        -- note that the empty set of words or letters is represented by the
+        -- value zero.
+        CREATE TABLE IF NOT EXISTS guess_combo_info (
+            guess TEXT,
+            combo_id INTEGER,
+            combo_is_possible INTEGER,
+            remaining_words_set_id NUMERIC,
+            remaining_letters_set_id NUMERIC,
+            PRIMARY KEY (guess, combo_id),
+            FOREIGN KEY (guess) REFERENCES unigram_frequency(word),
+            FOREIGN KEY (combo_id) REFERENCES combo_ids(combo_id),
+            CONSTRAINT word_set_id_at_least_zero CHECK (remaining_words_set_id >= 0),
+            CONSTRAINT letter_set_id_at_least_zero CHECK (remaining_letters_set_id >= 0)
+        );
     ")
 
 
@@ -149,20 +126,20 @@ tryCatch({
         words <- merge(words, unigrams, by = "word", all.x = TRUE)
         words[, count := as.integer(count)]
         data.table::setnafill(words, type = "const", fill = 0L, cols = "count")
+        data.table::setnames(words, "count", "frequency")
         data.table::setkey(words, "word")
         # values used when encoding words into a set.
-        # do this in a group by if extended to games of differing word lengths.
         words[, power_of_2 := as.character(gmp::pow.bigz(2L, seq_len(.N) - 1L))]
         words
     })
-    DBI::dbWriteTable(dbconn, "unigram_frequency", word_table, overwrite = TRUE, append = FALSE, row.names = FALSE)
+    DBI::dbWriteTable(dbconn, "unigram_frequency", word_table, append = TRUE, row.names = FALSE)
     # helper.
     split_words <- structure(strsplit(word_table[["word"]], "", fixed = TRUE), names = word_table[["word"]])
 
     # mapping between color and its integer representation.
     color_table <- data.table::data.table(representation = 0L:2L,
                                           color = c("green", "yellow", "grey"))
-    DBI::dbWriteTable(dbconn, "colors", color_table, overwrite = TRUE, append = FALSE, row.names = FALSE)
+    DBI::dbWriteTable(dbconn, "colors", color_table, append = TRUE, row.names = FALSE)
 
     # all color combos.
     color_combo_table <- local({
@@ -181,22 +158,33 @@ tryCatch({
         data.table::setkey(color_combos, "combo_id")
         color_combos[]
     })
-    DBI::dbWriteTable(dbconn, "color_combos", color_combo_table, overwrite = TRUE, append = FALSE, row.names = FALSE)
-    # filter down to those combos matching the number of letters in a guess
-    # (color_combo_table is generalizable to any word length).
-    filter_to_relevant_combos <- function(color_combos, num_characters_in_guess){
-        relevant_combos <- color_combos[, .(maxpos = max(letter_position)), .(combo_id)]
-        relevant_combos <- relevant_combos[maxpos == num_characters_in_guess, .(combo_id)]
-        # filter down to the combos for the num_character_in_guess games
-        relevant_combos <- merge(color_combos, relevant_combos, by = "combo_id", all.x = FALSE)
-        data.table::setorderv(relevant_combos, c("combo_id", "letter_position"))
-        relevant_combos
-    }
+    DBI::dbWriteTable(dbconn, "combo_ids", unique(color_combo_table[, .(combo_id)]), append = TRUE, row.names = FALSE)
+    DBI::dbWriteTable(dbconn, "color_combos", color_combo_table, append = TRUE, row.names = FALSE)
+
+    # values used when encoding letters into a set.
+    letter_values_table <- local({
+        letter_positions <- rep(seq_len(num_characters),
+                                each = length(letters))
+        letter_vec <- rep(letters, times = num_characters)
+        powers_of_2 <- gmp::pow.bigz(2L, seq_len(length(letters) * num_characters) - 1L)
+        powers_of_2 <- as.character(powers_of_2)
+        data.table::data.table(letter_position = letter_positions,
+                               letter = letter_vec,
+                               power_of_2 = powers_of_2)
+    })
+    data.table::setkeyv(letter_values_table, c("letter_position", "letter", "power_of_2"))
+    DBI::dbWriteTable(dbconn, "letter_values", letter_values_table, append = TRUE, row.names = FALSE)
+    # this is useful for encoding values
+    letter_encoding_lookup <- local({
+        letter_vec <- letter_values_table[, unique(letter)]
+        powers <- split(letter_values_table[, power_of_2],
+                        (seq_len(nrow(letter_values_table)) - 1L) %/% length(letter_vec))
+        unname(lapply(powers, function(elt) structure(elt, names = letter_vec)))
+    })
 
     # identify impossible color combos--a grey letter cannot also be green or yellow.
     combo_validity_table <- local({
         words <- word_table[["word"]]
-        color_combo_table <- filter_to_relevant_combos(color_combo_table, num_characters)
         color_combo_table <- color_combo_table[, .(combo_id, representation)]
         num_combos <- color_combo_table[, length(unique(combo_id))]
         grey_representation <- color_table[color == "grey", representation]
@@ -215,37 +203,29 @@ tryCatch({
                           }
                           data.table::data.table(guess = guess,
                                                  combo_id = inds,
-                                                 combo_is_possible = is_valid_combo)
+                                                 combo_is_possible = as.integer(is_valid_combo))
                       }) |>
         data.table::rbindlist(use.names = FALSE, fill = FALSE, ignore.attr = FALSE)
         data.table::setkey(out, "guess")
         out
     })
-    DBI::dbWriteTable(dbconn, "combo_validity", combo_validity_table, overwrite = TRUE, append = FALSE, row.names = FALSE)
-
-    # values used when encoding letters into a set.
-    letter_values_table <- local({
-        letter_positions <- rep(seq_len(num_characters),
-                                each = length(letters))
-        letter_vec <- rep(letters, times = num_characters)
-        powers_of_2 <- gmp::pow.bigz(2L, seq_len(length(letters) * num_characters) - 1L)
-        powers_of_2 <- as.character(powers_of_2)
-        data.table::data.table(letter_position = c(0L, letter_positions),
-                               letter = c("", letter_vec),
-                               power_of_2 = c("0", powers_of_2))
+    # add constraint checking bounds of set IDs
+    local({
+        query_fmt <- "
+            SELECT CAST(POW(2, n) AS TEXT) AS upper_bound
+            FROM (SELECT CAST(COUNT(*) AS NUMERIC) AS n FROM %s);
+        "
+        word_set_id_upper_bound <- dbGetQuery(dbconn, sprintf(query_fmt, "unigram_frequency"))[["upper_bound"]]
+        letter_set_id_upper_bound <- dbGetQuery(dbconn, sprintf(query_fmt, "letter_values"))[["upper_bound"]]
+        constraint_query <- "
+            ALTER TABLE guess_combo_info
+            ADD CONSTRAINT word_set_id_within_upper_bound CHECK (remaining_words_set_id < %s),
+            ADD CONSTRAINT letter_set_id_within_upper_bound CHECK(remaining_letters_set_id < %s);
+        "
+        constraint_query <- sprintf(constraint_query, word_set_id_upper_bound, letter_set_id_upper_bound)
+        DBI::dbExecute(dbconn, constraint_query)
     })
-    data.table::setkeyv(letter_values_table, c("letter_position", "letter", "power_of_2"))
-    DBI::dbWriteTable(dbconn, "letter_values", letter_values_table, overwrite = TRUE, append = FALSE, row.names = FALSE)
-    # this is useful for encoding values
-    letter_encoding_lookup <- local({
-        nozero <- letter_values_table[power_of_2 != "0"]
-        letter_vec <- nozero[, unique(letter)]
-        powers <- split(nozero[, power_of_2],
-                        (seq_len(nrow(nozero)) - 1L) %/% length(letter_vec))
-        unname(lapply(powers, function(elt) structure(elt, names = letter_vec)))
-    })
-    # decoding doesn't require a names attribute, only a properly-ordered vector
-    letter_decoding_lookup <- letter_values_table[power_of_2 != "0", letter]
+    DBI::dbWriteTable(dbconn, "guess_combo_info", combo_validity_table, append = TRUE, row.names = FALSE)
 
 }, finally = {
     DBI::dbDisconnect(dbconn)
@@ -316,26 +296,14 @@ guess_filter <- function(guess, combo, remaining_words, remaining_letters, color
     })
 }
 
-# helpers to filter down to the combos for the num_character_in_guess games.
-color_combos_in_game <- filter_to_relevant_combos(color_combo_table, num_characters)
-color_combos_in_game[, ordinal_id := .GRP, .(combo_id)] # used to look up combo id using a sequence staring
-                                                        # at 1 in a for loop (needed if color_combos has data
-                                                        # for more than one num_characters value).
 compute_outcomes <- local({
-    color_combo_ids <- color_combos_in_game[, .(combo_id = combo_id[1L]), .(ordinal_id)][, combo_id]
-    color_combo_representations <- split(color_combos_in_game, by = "ordinal_id", keep.by = FALSE, sorted = TRUE)
+    color_combo_ids <- color_combo_table[letter_position == 1L, combo_id]
+    color_combo_representations <- split(color_combo_table, by = "combo_id", keep.by = FALSE, sorted = TRUE)
     color_combo_representations <- lapply(color_combo_representations, function(tbl) tbl[, representation])
-    combo_validity_by_word_in_game <- merge(combo_validity_table,
-                                            unique(color_combos_in_game[, .(combo_id)]),
-                                            by = "combo_id",
-                                            all.x = TRUE)
-    combo_validity_by_word_in_game <- split(combo_validity_by_word_in_game, by = "guess", keep.by = FALSE)
+    combo_validity_by_word_in_game <- split(combo_validity_table, by = "guess", keep.by = FALSE)
     combo_validity_by_word_in_game <- lapply(combo_validity_by_word_in_game, `[[`, "combo_is_possible")
     color_lookup_vec <- color_table[, structure(representation, names = color)]
-    # computes the leaf nodes and their metadata for a single node along a tree of guesses.
-    function(previous_guess_id,
-             guess_num,
-             remaining_letters,
+    function(remaining_letters,
              remaining_words,
              letter_lookup, # this doesn't change but gets passed from higher on the stack.
              word_lookup,   # this doesn't change but gets passed from higher on the stack.
@@ -377,19 +345,17 @@ compute_outcomes <- local({
                                               num_characters_in_guess = num_characters_in_guess)
                     # this is the only place that uses the encodings, so it makes
                     # sense to compute the IDs here rather than in guess_filter.
-                    letter_set_id <- list(Reduce(`+`,
-                                                 Map(function(lettrs, lookup) sum(gmp::as.bigz(lookup[lettrs])),
-                                                     remaining[["letters"]],
-                                                     letter_lookup)))
-                    word_set_id <- word_lookup[remaining[["words"]]] |> gmp::sum.bigz() |> list()
+                    letter_set_id <- as.character(Reduce(`+`,
+                                                         Map(function(lettrs, lookup) sum(gmp::as.bigz(lookup[lettrs])),
+                                                             remaining[["letters"]],
+                                                             letter_lookup)))
+                    word_set_id <- word_lookup[remaining[["words"]]] |> gmp::sum.bigz() |> as.character()
                     rm(remaining)
                 } else {
-                    letter_set_id <- word_set_id <- list(as.bigz("0"))
+                    letter_set_id <- word_set_id <- "0"
                 }
-                outcome_id_tables[[i]] <- data.table::data.table(previous_guess_id = previous_guess_id,
-                                                                 current_guess_num = guess_num,
-                                                                 current_guess = guess,
-                                                                 current_combo_id = game_combo_ids[[i]],
+                outcome_id_tables[[i]] <- data.table::data.table(guess = guess,
+                                                                 combo_id = game_combo_ids[[i]],
                                                                  remaining_words_set_id = word_set_id,
                                                                  remaining_letters_set_id = letter_set_id)
             }
@@ -398,156 +364,6 @@ compute_outcomes <- local({
         guess_info
     }
 })
-
-# return the powers of 2 that sum to the input (whole numbers only).
-# <<only used by base2_decode>>
-base2_decomposition <- function(number){
-    UseMethod("base2_decomposition")
-}
-base2_decomposition.integer <- function(number) {
-    powers_of_2 <- integer(0L)
-    power <- 1L
-    while (number > 0L) {
-        if (number %% 2L == 1L) {
-            powers_of_2 <- c(powers_of_2, power)
-        }
-        number <- number %/% 2L
-        power <- power * 2L
-    }
-    powers_of_2
-}
-base2_decomposition.bigz <- function(number) {
-    zero <- gmp::as.bigz("0")
-    if(number == zero) return(zero)
-    one <- gmp::as.bigz("1")
-    two <- gmp::as.bigz("2")
-    power <- one
-    powers_of_2 <- gmp::as.bigz(character(0L))
-    while (number > zero) {
-        if (mod.bigz(number, two) == one) {
-            powers_of_2 <- c(powers_of_2, power)
-        }
-        number <- gmp::divq.bigz(number, two)
-        power <- gmp::mul.bigz(power, two)
-    }
-    powers_of_2
-}
-base2_decomposition.character <- base2_decomposition.bigz
-# decompose a whole number into a sum of powers of 2,
-# represent the decomposed values as a sequence into a vector,
-# and use this sequence to extract the elements of the vector represented by
-# the whole number, splitting into appropriate data structure for set_id_type.
-# <<only used by process_outcomes>>
-base2_decode <- function(set_id,
-                         set_id_type, # one of "word" or "letter"
-                         ordered_vector){
-    # the log2(x) + 1 operation converts the powers-of-2 decomposed number into
-    # an index (plus one due to 1-based indexing in R).
-    #
-    # log2 is a generic for bigz objects and seems to always return a double.
-    if(set_id_type == "word"){
-        decomp <- base2_decomposition(set_id)
-        if(any(decomp == "0")){
-            out <- character(0L)
-        } else {
-            out <- ordered_vector[log2(decomp) + 1]
-        }
-    } else if(set_id_type == "letter") {
-        # it doesn't matter if the decomp messes up due to there being
-        # no remaining letters in a given letter position since this
-        # object is never used when that is the case. therefore, no
-        # checks for the validity of the set id are required.
-        inds <- log2(base2_decomposition(set_id))
-        out <- unname(split(ordered_vector[inds + 1],
-                            inds %/% length(letters)))
-    } else {
-        stop("argument 'set_id_type' is not one of \"word\" or \"letter\"!")
-    }
-    out
-}
-# traverse each tree of guesses and write the results to the database.
-process_outcomes <- function(parent_id,
-                             parent_combo_id,
-                             current_guess_num,
-                             letters_that_remain, words_that_remain, dbconn,
-                             letter_enc_lookup = letter_encoding_lookup,
-                             letter_dec_lookup = letter_decoding_lookup,
-                             word_enc_lookup = word_table[, structure(power_of_2, names = word)],
-                             word_dec_lookup = names(word_enc_lookup),
-                             game_ending_combo_id = color_combos_in_game[ordinal_id == 1L, combo_id[1L]]){
-    # end traversal at terminal nodes in the tree of guesses (game-ending guesses).
-    # if the parent node doesn't have a remaining word, the game is over. if the
-    # last combo was all green (indicating the correct answer has been input),
-    # the game is over.
-    if(parent_combo_id == game_ending_combo_id || length(words_that_remain) == 0L){
-        # we do not need to return anything since we call this function for its
-        # side-effects (populating the database with data about each node in
-        # the trees of guesses).
-        return()
-    }
-    # compute outcomes for the current node
-    outcomes <- compute_outcomes(previous_guess_id = parent_id,
-                                 guess_num = current_guess_num,
-                                 remaining_letters = letters_that_remain,
-                                 remaining_words = words_that_remain,
-                                 letter_lookup = letter_enc_lookup,
-                                 word_lookup = word_enc_lookup)
-    # update database and determine which current_guess_id values to check in
-    # the recursive calls.
-    autoincrement_sql <- "SELECT seq FROM sqlite_sequence WHERE name = 'outcome_ids';"
-    if(current_guess_num == 1L){
-        last_node_before_insertion <- 0L
-    } else {
-        last_node_before_insertion <- dbGetQuery(dbconn, autoincrement_sql)[[1L]]
-    }
-    DBI::dbWriteTable(dbconn, "outcome_ids", outcomes, overwrite = FALSE, append = TRUE, row.names = FALSE)
-    last_node_after_insertion <- dbGetQuery(dbconn, autoincrement_sql)[[1L]]
-    outcome_ids_to_check <- (last_node_before_insertion + 1L):last_node_after_insertion
-    # allow garbage collector to free RAM
-    rm(outcomes, last_node_before_insertion, last_node_after_insertion)
-    # R doesn't like it when parameters pass themselves in recursive calls.
-    game_finishing_combo_id <- game_ending_combo_id
-    letter_encode_lookup <- letter_enc_lookup
-    letter_decode_lookup <- letter_dec_lookup
-    word_encode_lookup <- word_enc_lookup
-    word_decode_lookup <- word_dec_lookup
-    db <- dbconn
-    # traverse the trees of guesses, checking each outcome one by one.
-    outcomes_sql <- "
-        SELECT current_combo_id,
-               remaining_words_set_id,
-               remaining_letters_set_id
-        FROM outcome_ids
-        WHERE current_guess_id = :outcome_id_to_check
-    "
-    for(outcome_id_to_check in outcome_ids_to_check){
-        next_outcome_id <- dbGetQuery(dbconn,
-                                      outcomes_sql,
-                                      params = list(outcome_id_to_check = outcome_id_to_check))
-        combo_id_of_outcome <- next_outcome_id[["current_combo_id"]]
-        remaining_words <- next_outcome_id[["remaining_words_set_id"]][[1L]]
-        remaining_words <- base2_decode(gmp::as.bigz(remaining_words),
-                                        set_id_type = "word",
-                                        word_dec_lookup)
-        remaining_letters <- next_outcome_id[["remaining_letters_set_id"]][[1L]]
-        remaining_letters <- base2_decode(gmp::as.bigz(remaining_letters),
-                                          set_id_type = "letter",
-                                          letter_dec_lookup)
-        rm(next_outcome_id)
-        process_outcomes(parent_id = outcome_id_to_check, # unique node identifier (passed as previous_guess_id to compute_outcomes)
-                         parent_combo_id = combo_id_of_outcome, # used by recursive call to process_outcomes to determine if this was a game-ending combo (all greens)
-                         current_guess_num = current_guess_num + 1L,
-                         letters_that_remain = remaining_letters,
-                         words_that_remain = remaining_words,
-                         # those params that are passing themselves down the call stack:
-                         dbconn = db,
-                         letter_enc_lookup = letter_encode_lookup,
-                         letter_dec_lookup = letter_decode_lookup,
-                         word_enc_lookup = word_encode_lookup,
-                         word_dec_lookup = word_decode_lookup,
-                         game_ending_combo_id = game_finishing_combo_id)
-    }
-}
 
 local({
     # note that this compute cluster is specific to my SSH config, so your cluster
@@ -568,17 +384,33 @@ local({
                                        quiet = FALSE)
     on.exit(parallel::stopCluster(cl), add = TRUE)
     doParallel::registerDoParallel(cl)
-    if(file.exists("log/db_compute_times.log")) {
-        file.remove("log/db_compute_times.log")
-    }
-    # compute all outcomes in a tree of guesses.
-    con <- DBI::dbConnect(RSQLite::SQLite(), db_file)
-    on.exit(DBI::dbDisconnect(con), add = TRUE)
-    words <- word_table[["word"]]
-    process_outcomes(parent_id = NA_integer_, # passed as previous_guess_id to compute_outcomes
-                     parent_combo_id = 0L,
-                     current_guess_num = 1L,  # depth of node in tree
-                     letters_that_remain = abc,
-                     words_that_remain = words,
-                     dbconn = con)
+    # compute all remaining words and letters for each open guesses
+    outcomes <- compute_outcomes(remaining_letters = abc,
+                                 remaining_words = word_table[["word"]],
+                                 letter_lookup = letter_encoding_lookup,
+                                 word_lookup = word_table[, structure(power_of_2, names = word)])
+    con <- DBI::dbConnect(RPostgreSQL::PostgreSQL(),
+                          host = Sys.getenv("dbhost"),
+                          port = Sys.getenv("dbport"),
+                          dbname = Sys.getenv("dbname"),
+                          user = Sys.getenv("dbuser"),
+                          password = Sys.getenv("dbpass"))
+    on.exit({
+        DBI::dbExecute(con, "DROP TABLE IF EXISTS outcomes;")
+        DBI::dbDisconnect(con)
+    }, add = TRUE)
+    DBI::dbExecute(con, "CREATE TEMPORARY TABLE outcomes (guess TEXT,
+                                                          combo_id INTEGER,
+                                                          remaining_words_set_id NUMERIC,
+                                                          remaining_letters_set_id NUMERIC);")
+    DBI::dbWriteTable(con, "outcomes", outcomes, append = TRUE, row.names = FALSE)
+    rm(outcomes)
+    DBI::dbExecute(con, "
+        INSERT INTO guess_combo_info (guess, combo_id, remaining_words_set_id, remaining_letters_set_id)
+        SELECT * FROM outcomes
+        ON CONFLICT (guess, combo_id) DO
+        UPDATE SET
+        remaining_words_set_id = EXCLUDED.remaining_words_set_id,
+        remaining_letters_set_id = EXCLUDED.remaining_letters_set_id;
+    ")
 })
